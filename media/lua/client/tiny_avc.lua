@@ -2,10 +2,9 @@ require "ISUI/ISCollapsableWindow"
 require "ISUI/ISPanel"
 
 TinyAVC = {};
+TinyAVC.checked = false;
+TinyAVC.content = nil;
 TinyAVC.mods = {};
-TinyAVC.mods.tiny_avc = {};
-TinyAVC.mods.tiny_avc.url = "http://pzmap.crash-override.net/tiny_avc.txt";
-TinyAVC.mods.tiny_avc.version = "0.0.1";
 
 function split(inputstr, sep) -- {{{
 	if sep == nil then
@@ -41,7 +40,7 @@ pline = function (text) -- {{{ Print text to logfile
 end
 -- }}}
 getUrl = function(url) -- {{{
-	pline("Loading "..url);
+	--pline("Loading "..url);
 	local url = URL.new(url);
 	local conn = url:openStream();
 	local isr = DataInputStream.new(conn);
@@ -81,96 +80,95 @@ function TinyAVCInfo:initialise() -- {{{
   ISPanel.initialise(self);
 end -- }}}
 function TinyAVCInfo:createChildren()
-	pline("createChildren");
+	--pline("createChildren");
 	panel = ISRichTextPanel:new(5, 5, 580, 395);
 	panel:instantiate();
 	self:addChild(panel);
 	self.descriptionPanel = panel;
 end
 function TinyAVCInfo:prerender() -- {{{
-	if self.content ~= nil then return end;
+	if TinyAVC.checked then return end;
+	TinyAVC.checked = true;
 	local list = getModDirectoryTable();
 	local red = " <RGB:1,0,0> ";
 	local green = " <RGB:0,1,0> ";
 	local white = " <RGB:1,1,1> ";
-	local line = " <LINE> ";
-	-- pline("Mydocfolder: "..Core.getMyDocumentFolder());
-	-- pline("Sep: "..File.separator);
-	-- pline("List: "..dump(list));
-	self.content = "";
+	local newLine = " <LINE> ";
+	--pline("Mydocfolder: "..Core.getMyDocumentFolder());
+	--pline("Sep: "..File.separator);
+	--pline("List: "..dump(list));
+	TinyAVC.content = "";
 	for _,mod in pairs(list) do
-		local url = nil;
-		local version = nil;
-		local srcUrl = nil;
-		local latestVersion = nil;
-		local minVersion = nil;
-		--[[{{{
 		local f = getFileInput(".."..File.separator.."mods"..File.separator..mod..File.separator.."tiny_avc.txt");
 		if f ~= nil then
+			TinyAVC.mods[mod] = {};
 			local line = f:readLine();
 			while line ~= nil do
-				pline(line);
-				pline(dump(split(line, ":")));
-				pline(dump(string.starts(line, "url:")));
+				--pline(line);
+				--pline(dump(split(line, ":")));
+				--pline(dump(string.starts(line, "url:")));
 				if string.starts(line, "version:") then
 					local r = split(line, ":");
-					version = r[2];
+					TinyAVC.mods[mod].version = r[2];
 				end
 				if string.starts(line, "url:") then
 					local r = split(line, ":")
-					url = r[2]..":"..r[3];
+					TinyAVC.mods[mod].url = r[2]..":"..r[3];
 				end
 				line = f:readLine();
 			end
 			f:close();
-		else
-			pline(Core.getMyDocumentFolder()..File.separator.."mods"..File.separator..mod..File.separator.."tiny_avc.txt doesn't exist!");
+		--else
+			--pline(Core.getMyDocumentFolder()..File.separator.."mods"..File.separator..mod..File.separator.."tiny_avc.txt doesn't exist!");
 		end
-		--}}}]]
+
 		if TinyAVC.mods[mod] == nil then
-			self.content = self.content..red.."Mod "..mod.." has no TinyAVC support!"..white..line;
+			TinyAVC.content = TinyAVC.content..red.."Mod "..mod.." has no TinyAVC support!"..white..newLine;
 		else
-			url = TinyAVC.mods[mod].url;
-			version = TinyAVC.mods[mod].version;
-			pline("Version: "..dump(version).." URL: "..dump(url));
-			if url ~= nil then
-				local content = getUrl(url);
+			--pline("Version: "..dump(version).." URL: "..dump(url));
+			if TinyAVC.mods[mod].url ~= nil then
+				local content = getUrl(TinyAVC.mods[mod].url);
 				--[[ Format is:
 				--version:0.9.5
 				--minVersion:30.16
 				--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/ 
 				--]]
 				for _,line in pairs(split(content, "\n")) do
+					--pline("Line: "..line);
+					--pline("Split: "..dump(split(line, ":")));
 					if string.starts(line, "version:") then
 						local r = split(line, ":");
-						latestVersion = r[2];
+						TinyAVC.mods[mod].latestVersion = r[2];
 					end
-					if string.starts(line, "minVersion") then
+					if string.starts(line, "minVersion:") then
 						local r = split(line, ":");
-						minVersion = r[2];
+						TinyAVC.mods[mod].minVersion = r[2];
 					end
 					if string.starts(line, "url:") then
 						local r = split(line, ":");
-						srcUrl = r[2]..":"..r[3];
+						TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
 					end
 				end
 			end
-			if latestVersion ~= nil then
-				if latestVersion ~= version then
-					self.content = self.content..red.."Mod "..mod.." has a new version: "..latestVersion..line;
-					self.content = self.content..red.."URL: "..url..line;
+			if TinyAVC.mods[mod].latestVersion ~= nil then
+				if TinyAVC.mods[mod].latestVersion ~= TinyAVC.mods[mod].version then
+					TinyAVC.content = TinyAVC.content..green.."Mod "..mod.." has a new version: "..TinyAVC.mods[mod].latestVersion..newLine;
+					TinyAVC.content = TinyAVC.content..green.."URL: "..TinyAVC.mods[mod].url..newLine;
+					if TinyAVC.mods[mod].minVersion ~= getCore():getVersionNumber() then
+						TinyAVC.content = TinyAVC.content..green.."You need to update PZ to "..TinyAVC.mods[mod].minVersion.." before you can use this mod!"..newLine;
+					end
 				else
-					self.content = self.content..green.."Mod "..mod.." is the latest version: "..version..line;
+					TinyAVC.content = TinyAVC.content..white.."Mod "..mod.." is the latest version: "..TinyAVC.mods[mod].version..newLine;
 				end
 			else
-				self.content = self.content..red.."Can't check Mod "..mod.." for new version :-("..line;
+				TinyAVC.content = TinyAVC.content..red.."Can't check Mod "..mod.." for new version :-("..newLine;
 			end
 		end
 	end
 end
 -- }}}
 function TinyAVCInfo:render() -- {{{
-	self.descriptionPanel.text = self.content;
+	self.descriptionPanel.text = TinyAVC.content;
 	self.descriptionPanel:paginate();
 end -- }}}
 function TinyAVCInfo:new (x, y, width, height) -- {{{
