@@ -21,12 +21,139 @@ end
 -- }}}
 
 TinyAVC = {};
+TinyAVC.versionHistory = { -- {{{
+	["1"] = {
+		order = 1,
+		backwardsCompatible = false
+	},
+	["8"] = {
+		order = 2,
+		backwardsCompatible = false
+	},
+	["14"] = {
+		order = 3,
+		backwardsCompatible = false
+	},
+	["19"] = {
+		order = 4,
+		backwardsCompatible = false
+	},
+	["20"] = {
+		order = 5,
+		backwardsCompatible = false
+	},
+	["21"] = {
+		order = 6,
+		backwardsCompatible = false
+	},
+	["22"] = {
+		order = 7,
+		backwardsCompatible = false
+	},
+	["23"] = {
+		order = 8,
+		backwardsCompatible = false
+	},
+	["24"] = {
+		order = 9,
+		backwardsCompatible = false
+	},
+	["28"] = {
+		order = 10,
+		backwardsCompatible = false
+	},
+	["29.3"] = {
+		order = 11,
+		backwardsCompatible = false
+	},
+	["30.16"] = {
+		order = 12,
+		backwardsCompatible = false
+	},
+	["31"] = {
+		order = 13,
+		backwardsCompatible = false
+	}
+};
+-- }}}
+TinyAVC.sanitizeTISVersion = { -- {{{
+	-- Somewhere up here is 2.9.9.6
+	["2.9.9.17"]  =  "1", -- Build from around 2013-09-09, no idea where else to put this. Might also be 17d, idk.
+	["17 (0008)"] =  "8", -- actually 2.9.9.17 Build 8
+	["17 (0014)"] = "14", -- actually 2.9.9.17 Build 14
+	["Build: 19"] = "19", -- actually 2.9.9.17 Build 19
+	["17 (0020)"] = "20", -- actually 2.9.9.17 Build 20
+	["2.9.9.17b"] = "21", -- just counting up from here on
+	-- ["2.9.9.17"] -- this is actually 17d, but it didn't get the suffix. This means a collision with the first line in here.
+	["2.9.9.17e"] = "22",
+	["2.9.9.17e"] = "23",
+	["2.9.9.17g (0007)"] = "24", -- 2.9.9.17 Build g Subbuild 0007 and ohlordpleasekillmenow.
+	["Build 28"]  = "28",
+	["Early Access v. 29.3"] = "29.3",
+	["Early Access v. 30.16"] = "30.16",
+	["Early Access v. 31"] = "31"
+};
+-- }}}
+TinyAVC.sanitizeVersion = function(ver) -- {{{
+	if TinyAVC.sanitizeTISVersion[ver] ~= nil then
+		ver = TinyAVC.sanitizeTISVersion[ver];
+	end
+	return ver;
+end -- }}}
+TinyAVC.isNewerVersion = function(old, new) -- {{{
+	old = TinyAVC.sanitizeVersion(old);
+	new = TinyAVC.sanitizeVersion(new);
+	local oldV = TinyAVC.versionHistory[old];
+	local newV = TinyAVC.versionHistory[new];
+
+	if oldV == nil or newV == nil then
+		return true; -- if we don't know the version, it's probably newer than this mod.
+	end
+	return oldV.order < newV.order;
+end -- }}}
+TinyAVC.isOlderVersion = function(old, new) -- {{{
+	old = TinyAVC.sanitizeVersion(old);
+	new = TinyAVC.sanitizeVersion(new);
+	local oldV = TinyAVC.versionHistory[old];
+	local newV = TinyAVC.versionHistory[new];
+
+	if oldV == nil or newV == nil then
+		return false; -- if we don't know the version, it's probably not older than this mod.
+	end
+	return oldV.order > newV.order;
+end -- }}}
+TinyAVC.versionIsCompatible = function(old, new) -- {{{
+	old = TinyAVC.sanitizeVersion(old);
+	new = TinyAVC.sanitizeVersion(new);
+	local inBetween = false;
+	local foundOld = false;
+	local foundNew = false;
+	for k,v in pairs(TinyAVC.versionHistory) do
+		if inBetween then
+			if not v.backwardsCompatible then
+				return false;
+			end
+		end
+		if k == old then
+			inBetween = true;
+			foundOld = true;
+		end
+		if k == new then
+			inBetween = false;
+			foundNew = true;
+		end
+	end
+	if not (foundOld and foundNew) then
+		return false; -- at least one version was not found, err on the side of caution.
+	end
+	return true;
+end -- }}}
 TinyAVC.mods = {};
 TinyAVC.urlbuttons = {};
 TinyAVC.checked = false;
 TinyAVC.content = nil;
 
---[[
+---[[
 TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
 	if lvl == nil then lvl = 0 end
 	if lvl >= 10 then return "Stack overflow" end
@@ -114,7 +241,7 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 			--[[ Format is:
 			--version:0.9.5
 			--minVersion:30.16
-			--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/ 
+			--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
 			--]]
 			for _,line in pairs(string.split(content, "\n")) do
 				if string.starts(line, "version:") then
@@ -143,21 +270,22 @@ function TinyAVCWindow:render() -- {{{
 	if not TinyAVC.checked then return end
 
 	local i = 0;
-	for mod,_ in pairs(TinyAVC.mods) do
+	for modName,mod in pairs(TinyAVC.mods) do
+		TinyAVC.pline(TinyAVC.dump(modName));
 		local r = 1;
 		local g = 1;
 		local b = 1;
 		local a = 1;
-		if TinyAVC.mods[mod].url ~= nil then
-			if TinyAVC.mods[mod].latestVersion ~= TinyAVC.mods[mod].version then
+		if mod.url ~= nil then
+			if mod.latestVersion ~= mod.version then
 				r = 0;
 				g = 1;
 				b = 0;
 			end
-			self:drawText(                  mod,                          2, 42+i*15, r, g, b, a);
-			self:drawText(TinyAVC.mods[mod].version,       self.width*0.6+2, 42+i*15, r, g, b, a);
-			self:drawText(TinyAVC.mods[mod].latestVersion, self.width*0.7+2, 42+i*15, r, g, b, a);
-			self:drawText(TinyAVC.mods[mod].minVersion,    self.width*0.8+2, 42+i*15, r, g, b, a);
+			self:drawText(modName,           2, 42+i*15, r, g, b, a);
+			self:drawText(mod.version,       self.width*0.6+2, 42+i*15, r, g, b, a);
+			self:drawText(mod.latestVersion, self.width*0.7+2, 42+i*15, r, g, b, a);
+			self:drawText(mod.minVersion,    self.width*0.8+2, 42+i*15, r, g, b, a);
 
 			if TinyAVC.urlbuttons[i] == nil then
 				urlButton = ISButton:new(self.width*0.9+1, 42+i*15, self.width*0.1-2, 15, "URL", self, ModSelector.onOptionMouseDown);
@@ -169,9 +297,25 @@ function TinyAVCWindow:render() -- {{{
 				self:addChild(urlButton);
 				TinyAVC.urlbuttons[i] = urlButton;
 			end
-			TinyAVC.urlbuttons[i].url = TinyAVC.mods[mod].srcUrl;
+			TinyAVC.urlbuttons[i].url = mod.srcUrl;
+
+			if TinyAVC.isNewerVersion(getCore():getVersionNumber(), mod.minVersion) then
+				i = i + 1;
+				self:drawText("You must update PZ to at least version "..mod.minVersion.." to use this mod!", 22, 42+i*15, r, g, b, a);
+				if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), mod.minVersion) then
+					i = i + 1;
+					self:drawText("Version "..getCore():getVersionNumber().." is not compatible to "..mod.minVersion.."! Expect breakage!", 22, 42+i*15, r, g, b, a);
+				end
+			elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), mod.minVersion) then
+				i = i + 1;
+				self:drawText("This mod was built for PZ version "..mod.minVersion.."!", 22, 42+i*15, r, g, b, a);
+				if not TinyAVC.versionIsCompatible(mod.minVersion, getCore():getVersionNumber()) then
+					i = i + 1;
+					self:drawText("Version "..getCore():getVersionNumber().." is not compatible to "..mod.minVersion.."! Expect breakage!", 22, 42+i*15, r, g, b, a);
+				end
+			end
 		else
-			self:drawText(mod.." does not support Tiny AVC :-(",          2, 42+i*15, 1, 0, 0, 1);
+			self:drawText(modName.." does not support Tiny AVC :-(", 2, 42+i*15, 1, 0, 0, 1);
 		end
 		i = i + 1;
 	end
@@ -184,8 +328,8 @@ function TinyAVCWindow:new (x, y, width, height) -- {{{
 	o.title = "Tiny Automated Version Checker";
 	o.minimumWidth = 200;
 	o.minimumHeight = 100;
-	return o 
-end -- }}} 
+	return o
+end -- }}}
 function TinyAVCWindow:onResize() -- {{{
 	ISCollapsableWindow.onResize(self);
 	self.headerMod:setWidth(self.width*0.6-1);
