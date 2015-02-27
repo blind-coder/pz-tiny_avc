@@ -72,7 +72,7 @@ TinyAVC.versionHistory = { -- {{{
 	},
 	["31"] = {
 		order = 13,
-		backwardsCompatible = false
+		backwardsCompatible = true
 	}
 };
 -- }}}
@@ -349,19 +349,22 @@ end -- }}}
 TinyAVC.init = function() -- {{{
 	TinyAVC.win = TinyAVCWindow:new(100,100,600,400);
 	TinyAVC.win:initialise();
-	TinyAVC.win:addToUIManager();
 	TinyAVC.win:setVisible(false);
+	MainScreen.instance:addChild(TinyAVC.win);
 
-	-- Position the button next to the MODS label
-	local x = MainScreen.instance.modsOption:getX();
-	x = x + MainScreen.instance.modsOption:getWidth();
-	x = x + 30;
-	local y = MainScreen.instance.modsOption:getY();
-	local w = 64;
-	local h = MainScreen.instance.bottomPanel:getHeight() - y * 2;
+	-- Position the button next to the Get Mods button
+	local x = MainScreen.instance.modSelect.getModButton:getX();
+	x       = x + MainScreen.instance.modSelect.getModButton:getWidth();
+	x       = x + 10;
+	local y = MainScreen.instance.modSelect.getModButton:getY();
+	local w = MainScreen.instance.modSelect.getModButton:getWidth();
+	local h = MainScreen.instance.modSelect.getModButton:getHeight();
 
 	TinyAVC.checkNow = ISButton:new(x, y, w, h, "Check for updates", TinyAVC.win, TinyAVCWindow.checkForUpdate);
-	MainScreen.instance.bottomPanel:addChild(TinyAVC.checkNow);
+	TinyAVC.checkNow.borderColor = {r=1, g=1, b=1, a=0.1};
+	TinyAVC.checkNow:ignoreWidthChange();
+	TinyAVC.checkNow:ignoreHeightChange();
+	MainScreen.instance.modSelect:addChild(TinyAVC.checkNow);
 end
 -- }}}
 Events.OnMainMenuEnter.Add(TinyAVC.init);
