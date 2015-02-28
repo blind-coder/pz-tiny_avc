@@ -153,7 +153,7 @@ TinyAVC.urlbuttons = {};
 TinyAVC.checked = false;
 TinyAVC.content = nil;
 
----[[
+--[[
 TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
 	if lvl == nil then lvl = 0 end
 	if lvl >= 10 then return "Stack overflow" end
@@ -271,7 +271,6 @@ function TinyAVCWindow:render() -- {{{
 
 	local i = 0;
 	for modName,mod in pairs(TinyAVC.mods) do
-		TinyAVC.pline(TinyAVC.dump(modName));
 		local r = 1;
 		local g = 1;
 		local b = 1;
@@ -364,6 +363,11 @@ TinyAVC.init = function() -- {{{
 	TinyAVC.checkNow.borderColor = {r=1, g=1, b=1, a=0.1};
 	TinyAVC.checkNow:ignoreWidthChange();
 	TinyAVC.checkNow:ignoreHeightChange();
+	TinyAVC.checkNow:setAnchorLeft(true);
+	TinyAVC.checkNow:setAnchorRight(false);
+	TinyAVC.checkNow:setAnchorTop(false);
+	TinyAVC.checkNow:setAnchorBottom(true);
+
 	MainScreen.instance.modSelect:addChild(TinyAVC.checkNow);
 end
 -- }}}
