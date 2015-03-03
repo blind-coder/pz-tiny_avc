@@ -21,6 +21,47 @@ end
 -- }}}
 
 TinyAVC = {};
+TinyAVC.mods = {};
+TinyAVC.urlbuttons = {};
+TinyAVC.checked = false;
+TinyAVC.content = nil;
+--[[
+TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
+	if lvl == nil then lvl = 0 end
+	if lvl >= 10 then return "Stack overflow" end
+
+	if type(o) == 'table' then
+		local s = '{ '
+		for k,v in pairs(o) do
+			if type(k) ~= 'number' then k = '"'..k..'"' end
+			s = s .. '['..k..'] = ' .. TinyAVC.dump(v, lvl + 1) .. ','
+		end
+		return s .. '} '
+	else
+		return tostring(o)
+	end
+end
+-- }}}
+TinyAVC.pline = function (text) -- {{{ Print text to logfile
+	print(tostring(text));
+end
+-- }}}
+--]]
+
+TinyAVC.getUrl = function(url) -- {{{
+	local url = URL.new(url);
+	local conn = url:openStream();
+	local isr = DataInputStream.new(conn);
+	local content = "";
+	local line = isr:readLine();
+	while line ~= nil do
+		content = content.."\n"..line;
+		line = isr:readLine();
+	end
+	isr:close();
+	return content;
+end
+-- }}}
 TinyAVC.versionHistory = { -- {{{
 	["1"] = {
 		order = 1,
@@ -72,7 +113,7 @@ TinyAVC.versionHistory = { -- {{{
 	},
 	["31"] = {
 		order = 13,
-		backwardsCompatible = true
+		backwardsCompatible = false
 	}
 };
 -- }}}
@@ -148,49 +189,93 @@ TinyAVC.versionIsCompatible = function(old, new) -- {{{
 	end
 	return true;
 end -- }}}
-TinyAVC.mods = {};
-TinyAVC.urlbuttons = {};
-TinyAVC.checked = false;
-TinyAVC.content = nil;
 
---[[
-TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
-	if lvl == nil then lvl = 0 end
-	if lvl >= 10 then return "Stack overflow" end
+TinyAVCModPanel = ISPanel:derive("TinyAVCModPanel");
+function TinyAVCModPanel:createChildren() -- {{{
+	ISPanel.createChildren(self);
+	self.urlButton = ISButton:new(self.width*0.9+1, 0, self.width*0.1-2, self:getHeight(), "URL", self, ModSelector.onOptionMouseDown);
+	self.urlButton.internal = "URL";
+	self.urlButton:initialise();
+	self.urlButton:instantiate();
+	self.urlButton:setFont(UIFont.Small);
+	self:addChild(self.urlButton);
+end
+-- }}}
+function TinyAVCModPanel:setHeight(newY) -- {{{
+	if self:getHeight() == newY then return end;
 
-	if type(o) == 'table' then
-		local s = '{ '
-		for k,v in pairs(o) do
-			if type(k) ~= 'number' then k = '"'..k..'"' end
-			s = s .. '['..k..'] = ' .. TinyAVC.dump(v, lvl + 1) .. ','
+	local diff = newY - self:getHeight();
+	ISPanel.setHeight(self, newY);
+	self.urlButton:setHeight(newY);
+	local ptr = self.next;
+	while ptr do
+		ptr:setY(ptr:getY()+diff);
+		ptr = ptr.next;
+	end
+end
+-- }}}
+function TinyAVCModPanel:render() -- {{{
+	self.background = self:isMouseOver();
+	ISPanel.render(self);
+
+	if self.modInfo.url ~= nil then
+		local r = 1;
+		local g = 1;
+		local b = 1;
+		local a = 1;
+		if self.modInfo.latestVersion ~= self.modInfo.version then
+			r = 0;
+			g = 1;
+			b = 0;
 		end
-		return s .. '} '
+		local lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
+
+		self:drawText(self.modInfo.name,                         2, 2, r, g, b, a);
+		self:drawText(self.modInfo.version,       self.width*0.6+2, 2, r, g, b, a);
+		self:drawText(self.modInfo.latestVersion, self.width*0.7+2, 2, r, g, b, a);
+		self:drawText(self.modInfo.minVersion,    self.width*0.8+2, 2, r, g, b, a);
+
+		self.urlButton.url = self.modInfo.srcUrl;
+
+		local line2 = nil;
+		local line3 = nil;
+		if TinyAVC.isNewerVersion(getCore():getVersionNumber(), self.modInfo.minVersion) then
+			line2 = "You must update PZ to at least version "..self.modInfo.minVersion.." to use this mod!";
+			if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), self.modInfo.minVersion) then
+				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..self.modInfo.minVersion.."! Expect breakage!";
+			end
+		elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), self.modInfo.minVersion) then
+			line2 = "This mod was built for PZ version "..self.modInfo.minVersion.."!";
+			if not TinyAVC.versionIsCompatible(self.modInfo.minVersion, getCore():getVersionNumber()) then
+				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..self.modInfo.minVersion.."! Expect breakage!";
+			end
+		end
+		if line2 ~= nil then
+			self:drawText(line2, 22, 2 + lineHeight + 2, r, g, b, a);
+		end
+		if line3 ~= nil then
+			self:setHeight(2 + lineHeight + 2 + lineHeight + 2 + lineHeight + 2);
+			self:drawText(line3, 22, 2 + lineHeight + 2 + lineHeight + 2, r, g, b, a);
+		end
 	else
-		return tostring(o)
+		self:drawText(self.modInfo.name.." does not support Tiny AVC :-(", 2, 2, 1, 0, 0, 1);
 	end
 end
 -- }}}
-TinyAVC.pline = function (text) -- {{{ Print text to logfile
-	print(tostring(text));
-end
--- }}}
---]]
-TinyAVC.getUrl = function(url) -- {{{
-	local url = URL.new(url);
-	local conn = url:openStream();
-	local isr = DataInputStream.new(conn);
-	local content = "";
-	local line = isr:readLine();
-	while line ~= nil do
-		content = content.."\n"..line;
-		line = isr:readLine();
-	end
-	isr:close();
-	return content;
+function TinyAVCModPanel:new(x, y, w, h, modInfo) -- {{{
+	local o = {};
+	o = ISPanel:new(x, y, w, h);
+	setmetatable(o, self)
+	self.__index = self
+	o.modInfo = modInfo;
+	o.background = true;
+	o.backgroundColor = {r=0.5, g=0.5, b=0.5, a=1};
+	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
+	return o;
 end
 -- }}}
 
-TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow"); -- {{{
+TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
 function TinyAVCWindow:initialise() -- {{{
 	ISCollapsableWindow.initialise(self);
 end -- }}}
@@ -264,59 +349,19 @@ end
 function TinyAVCWindow:checkForUpdate() -- {{{
 	self:setVisible(true);
 	self:downloadUpdates();
-end -- }}}
-function TinyAVCWindow:render() -- {{{
-	ISCollapsableWindow.render(self);
-	if not TinyAVC.checked then return end
+	local y = 40;
+	local lastPanel = nil;
 
-	local i = 0;
 	for modName,mod in pairs(TinyAVC.mods) do
-		local r = 1;
-		local g = 1;
-		local b = 1;
-		local a = 1;
-		if mod.url ~= nil then
-			if mod.latestVersion ~= mod.version then
-				r = 0;
-				g = 1;
-				b = 0;
-			end
-			self:drawText(modName,           2, 42+i*15, r, g, b, a);
-			self:drawText(mod.version,       self.width*0.6+2, 42+i*15, r, g, b, a);
-			self:drawText(mod.latestVersion, self.width*0.7+2, 42+i*15, r, g, b, a);
-			self:drawText(mod.minVersion,    self.width*0.8+2, 42+i*15, r, g, b, a);
-
-			if TinyAVC.urlbuttons[i] == nil then
-				urlButton = ISButton:new(self.width*0.9+1, 42+i*15, self.width*0.1-2, 15, "URL", self, ModSelector.onOptionMouseDown);
-				urlButton.internal = "URL";
-				urlButton:initialise();
-				urlButton:instantiate();
-				urlButton.borderColor = {r=1, g=1, b=1, a=1};
-				urlButton:setFont(UIFont.Small);
-				self:addChild(urlButton);
-				TinyAVC.urlbuttons[i] = urlButton;
-			end
-			TinyAVC.urlbuttons[i].url = mod.srcUrl;
-
-			if TinyAVC.isNewerVersion(getCore():getVersionNumber(), mod.minVersion) then
-				i = i + 1;
-				self:drawText("You must update PZ to at least version "..mod.minVersion.." to use this mod!", 22, 42+i*15, r, g, b, a);
-				if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), mod.minVersion) then
-					i = i + 1;
-					self:drawText("Version "..getCore():getVersionNumber().." is not compatible to "..mod.minVersion.."! Expect breakage!", 22, 42+i*15, r, g, b, a);
-				end
-			elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), mod.minVersion) then
-				i = i + 1;
-				self:drawText("This mod was built for PZ version "..mod.minVersion.."!", 22, 42+i*15, r, g, b, a);
-				if not TinyAVC.versionIsCompatible(mod.minVersion, getCore():getVersionNumber()) then
-					i = i + 1;
-					self:drawText("Version "..getCore():getVersionNumber().." is not compatible to "..mod.minVersion.."! Expect breakage!", 22, 42+i*15, r, g, b, a);
-				end
-			end
-		else
-			self:drawText(modName.." does not support Tiny AVC :-(", 2, 42+i*15, 1, 0, 0, 1);
+		mod.name = modName;
+		local modPanel = TinyAVCModPanel:new(0, y, self:getWidth(), 30, mod);
+		self:addChild(modPanel);
+		modPanel.prev = lastPanel;
+		if lastPanel ~= nil then
+			lastPanel.next = modPanel;
 		end
-		i = i + 1;
+		lastPanel = modPanel;
+		y = y + modPanel:getHeight();
 	end
 end -- }}}
 function TinyAVCWindow:new (x, y, width, height) -- {{{
@@ -344,7 +389,7 @@ function TinyAVCWindow:onResize() -- {{{
 		v:setWidth(self.width*0.1-2);
 	end
 end -- }}}
--- }}}
+
 TinyAVC.init = function() -- {{{
 	TinyAVC.win = TinyAVCWindow:new(100,100,600,400);
 	TinyAVC.win:initialise();
