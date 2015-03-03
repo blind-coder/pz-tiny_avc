@@ -22,19 +22,24 @@ end
 
 TinyAVC = {};
 TinyAVC.mods = {};
-TinyAVC.urlbuttons = {};
 TinyAVC.checked = false;
 TinyAVC.content = nil;
+TinyAVC.modPanels = {};
+TinyAVC.lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
 --[[
 TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
 	if lvl == nil then lvl = 0 end
-	if lvl >= 10 then return "Stack overflow" end
+	if lvl >= 10 then return "Stack overflow ("..tostring(o)..")" end
 
 	if type(o) == 'table' then
 		local s = '{ '
 		for k,v in pairs(o) do
-			if type(k) ~= 'number' then k = '"'..k..'"' end
-			s = s .. '['..k..'] = ' .. TinyAVC.dump(v, lvl + 1) .. ','
+			if k == "prev" or k == "next" then
+				s = s .. '['..k..'] = '..tostring(v);
+			else
+				if type(k) ~= 'number' then k = '"'..k..'"' end
+				s = s .. '['..k..'] = ' .. TinyAVC.dump(v, lvl + 1) .. ','
+			end
 		end
 		return s .. '} '
 	else
@@ -113,7 +118,7 @@ TinyAVC.versionHistory = { -- {{{
 	},
 	["31"] = {
 		order = 13,
-		backwardsCompatible = false
+		backwardsCompatible = true
 	}
 };
 -- }}}
@@ -201,6 +206,14 @@ function TinyAVCModPanel:createChildren() -- {{{
 	self:addChild(self.urlButton);
 end
 -- }}}
+function TinyAVCModPanel:setWidth(newX) -- {{{
+	if self:getWidth() == newX then return end;
+	ISPanel.setWidth(self, newX);
+
+	self.urlButton:setX(newX*0.9+1);
+	self.urlButton:setWidth(newX*0.1-2);
+end
+-- }}}
 function TinyAVCModPanel:setHeight(newY) -- {{{
 	if self:getHeight() == newY then return end;
 
@@ -228,7 +241,6 @@ function TinyAVCModPanel:render() -- {{{
 			g = 1;
 			b = 0;
 		end
-		local lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
 
 		self:drawText(self.modInfo.name,                         2, 2, r, g, b, a);
 		self:drawText(self.modInfo.version,       self.width*0.6+2, 2, r, g, b, a);
@@ -251,11 +263,11 @@ function TinyAVCModPanel:render() -- {{{
 			end
 		end
 		if line2 ~= nil then
-			self:drawText(line2, 22, 2 + lineHeight + 2, r, g, b, a);
+			self:drawText(line2, 22, 2 + TinyAVC.lineHeight + 2, r, g, b, a);
 		end
 		if line3 ~= nil then
-			self:setHeight(2 + lineHeight + 2 + lineHeight + 2 + lineHeight + 2);
-			self:drawText(line3, 22, 2 + lineHeight + 2 + lineHeight + 2, r, g, b, a);
+			self:setHeight(2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2);
+			self:drawText(line3, 22, 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2, r, g, b, a);
 		end
 	else
 		self:drawText(self.modInfo.name.." does not support Tiny AVC :-(", 2, 2, 1, 0, 0, 1);
@@ -282,16 +294,16 @@ end -- }}}
 function TinyAVCWindow:createChildren() -- {{{
 	ISCollapsableWindow.createChildren(self);
 
-	self.headerMod = ISButton:new(1, 20, self.width*0.6-1, 20, "Mod");
+	self.headerMod = ISButton:new(1, 17, self.width*0.6-1, 20, "Mod");
 	self:addChild(self.headerMod);
 
-	self.headerCurVer = ISButton:new(self.width*0.6, 20, self.width*0.1, 20, "Current");
+	self.headerCurVer = ISButton:new(self.width*0.6, 17, self.width*0.1, 20, "Current");
 	self:addChild(self.headerCurVer);
 
-	self.headerLastVer = ISButton:new(self.width*0.7, 20, self.width*0.1, 20, "Latest");
+	self.headerLastVer = ISButton:new(self.width*0.7, 17, self.width*0.1, 20, "Latest");
 	self:addChild(self.headerLastVer);
 
-	self.headerNeedPZVer = ISButton:new(self.width*0.8, 20, self.width*0.1, 20, "Need PZ");
+	self.headerNeedPZVer = ISButton:new(self.width*0.8, 17, self.width*0.1, 20, "Need PZ");
 	self:addChild(self.headerNeedPZVer);
 end -- }}}
 function TinyAVCWindow:downloadUpdates() -- {{{
@@ -349,13 +361,14 @@ end
 function TinyAVCWindow:checkForUpdate() -- {{{
 	self:setVisible(true);
 	self:downloadUpdates();
-	local y = 40;
+	local y = self.headerMod:getY()+self.headerMod:getHeight();
 	local lastPanel = nil;
 
 	for modName,mod in pairs(TinyAVC.mods) do
 		mod.name = modName;
-		local modPanel = TinyAVCModPanel:new(0, y, self:getWidth(), 30, mod);
+		modPanel = TinyAVCModPanel:new(0, y, self:getWidth(), 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2, mod);
 		self:addChild(modPanel);
+		TinyAVC.modPanels[modPanel.ID] = modPanel;
 		modPanel.prev = lastPanel;
 		if lastPanel ~= nil then
 			lastPanel.next = modPanel;
@@ -363,6 +376,8 @@ function TinyAVCWindow:checkForUpdate() -- {{{
 		lastPanel = modPanel;
 		y = y + modPanel:getHeight();
 	end
+
+	self.minimumHeight = y+15;
 end -- }}}
 function TinyAVCWindow:new (x, y, width, height) -- {{{
 	local o = {}
@@ -370,7 +385,7 @@ function TinyAVCWindow:new (x, y, width, height) -- {{{
 	setmetatable(o, self)
 	self.__index = self
 	o.title = "Tiny Automated Version Checker";
-	o.minimumWidth = 200;
+	o.minimumWidth = 500;
 	o.minimumHeight = 100;
 	return o
 end -- }}}
@@ -384,11 +399,11 @@ function TinyAVCWindow:onResize() -- {{{
 	self.headerNeedPZVer:setX(self.width*0.8);
 	self.headerNeedPZVer:setWidth(self.width*0.1);
 
-	for k,v in pairs(TinyAVC.urlbuttons) do
-		v:setX(self.width*0.9+1);
-		v:setWidth(self.width*0.1-2);
+	for _,child in pairs(TinyAVC.modPanels) do
+		child:setWidth(self.width);
 	end
-end -- }}}
+end
+-- }}}
 
 TinyAVC.init = function() -- {{{
 	TinyAVC.win = TinyAVCWindow:new(100,100,600,400);
