@@ -119,7 +119,7 @@ TinyAVC.versionHistory = { -- {{{
 	["31"] = {
 		order = 13,
 		backwardsCompatible = true
-	}
+	},
 	["31.1"] = {
 		order = 14,
 		backwardsCompatible = true
@@ -141,7 +141,7 @@ TinyAVC.sanitizeTISVersion = { -- {{{
 	["Build 28"]  = "28",
 	["Early Access v. 29.3"] = "29.3",
 	["Early Access v. 30.16"] = "30.16",
-	["Early Access v. 31"] = "31"
+	["Early Access v. 31"] = "31",
 	["Early Access v. 31.1"] = "31.1"
 };
 -- }}}
