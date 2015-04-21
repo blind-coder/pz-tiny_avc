@@ -159,6 +159,46 @@ TinyAVC.versionHistory = { -- {{{
 	["31.10"] = {
 		order = 23,
 		backwardsCompatible = true
+	},
+	["31.11"] = {
+		order = 24,
+		backwardsCompatible = true
+	},
+	["31.12"] = {
+		order = 25,
+		backwardsCompatible = true
+	},
+	["31.13"] = {
+		order = 26,
+		backwardsCompatible = true
+	},
+	["31.14"] = {
+		order = 27,
+		backwardsCompatible = true
+	},
+	["31.15"] = {
+		order = 28,
+		backwardsCompatible = true
+	},
+	["31.16"] = {
+		order = 29,
+		backwardsCompatible = true
+	},
+	["31.17"] = {
+		order = 30,
+		backwardsCompatible = true
+	},
+	["31.18"] = {
+		order = 31,
+		backwardsCompatible = true
+	},
+	["31.19"] = {
+		order = 32,
+		backwardsCompatible = true
+	},
+	["31.20"] = {
+		order = 33,
+		backwardsCompatible = true
 	}
 };
 -- }}}
@@ -187,8 +227,17 @@ TinyAVC.sanitizeTISVersion = { -- {{{
 	["Early Access v. 31.7"] = "31.7",
 	["Early Access v. 31.8"] = "31.8",
 	["Early Access v. 31.9"] = "31.9",
-	["Early Access v. 31.10"] = "31.10"
-
+	["Early Access v. 31.10"] = "31.10",
+	["Early Access v. 31.11"] = "31.11",
+	["Early Access v. 31.12"] = "31.12",
+	["Early Access v. 31.13"] = "31.13",
+	["Early Access v. 31.14"] = "31.14",
+	["Early Access v. 31.15"] = "31.15",
+	["Early Access v. 31.16"] = "31.16",
+	["Early Access v. 31.17"] = "31.17",
+	["Early Access v. 31.18"] = "31.18",
+	["Early Access v. 31.19"] = "31.19",
+	["Early Access v. 31.20"] = "31.20"
 };
 -- }}}
 TinyAVC.sanitizeVersion = function(ver) -- {{{
