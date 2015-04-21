@@ -1,2 +1,2 @@
 version:0.4.6
-url:http://pzmap.crash-override.net/tiny_avc.txt
+url:https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/latest_version.txt
