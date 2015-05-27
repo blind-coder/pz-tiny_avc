@@ -54,9 +54,9 @@ end
 --]]
 
 TinyAVC.getUrl = function(url) -- {{{
-	local url = URL.new(url);
-	local conn = url:openStream();
-	local isr = DataInputStream.new(conn);
+	local isr = getUrlInputStream(url);
+	if not isr then return "" end;
+
 	local content = "";
 	local line = isr:readLine();
 	while line ~= nil do
@@ -64,6 +64,7 @@ TinyAVC.getUrl = function(url) -- {{{
 		line = isr:readLine();
 	end
 	isr:close();
+
 	return content;
 end
 -- }}}
@@ -172,32 +173,12 @@ TinyAVC.versionHistory = { -- {{{
 		order = 26,
 		backwardsCompatible = true
 	},
-	["31.14"] = {
+	["32.1"] = {
 		order = 27,
-		backwardsCompatible = true
+		backwardsCompatible = false
 	},
-	["31.15"] = {
+	["32.2"] = {
 		order = 28,
-		backwardsCompatible = true
-	},
-	["31.16"] = {
-		order = 29,
-		backwardsCompatible = true
-	},
-	["31.17"] = {
-		order = 30,
-		backwardsCompatible = true
-	},
-	["31.18"] = {
-		order = 31,
-		backwardsCompatible = true
-	},
-	["31.19"] = {
-		order = 32,
-		backwardsCompatible = true
-	},
-	["31.20"] = {
-		order = 33,
 		backwardsCompatible = true
 	}
 };
@@ -231,13 +212,8 @@ TinyAVC.sanitizeTISVersion = { -- {{{
 	["Early Access v. 31.11"] = "31.11",
 	["Early Access v. 31.12"] = "31.12",
 	["Early Access v. 31.13"] = "31.13",
-	["Early Access v. 31.14"] = "31.14",
-	["Early Access v. 31.15"] = "31.15",
-	["Early Access v. 31.16"] = "31.16",
-	["Early Access v. 31.17"] = "31.17",
-	["Early Access v. 31.18"] = "31.18",
-	["Early Access v. 31.19"] = "31.19",
-	["Early Access v. 31.20"] = "31.20"
+	["Early Access v. 32.1"] = "32.1",
+	["Early Access v. 32.2"] = "32.2"
 };
 -- }}}
 TinyAVC.sanitizeVersion = function(ver) -- {{{
@@ -413,7 +389,7 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 	local list = getModDirectoryTable();
 	for _,mod in pairs(list) do
 		TinyAVC.mods[mod] = {};
-		local f = getFileInput(".."..File.separator.."mods"..File.separator..mod..File.separator.."tiny_avc.txt");
+		local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
 		if f ~= nil then
 			local line = f:readLine();
 			while line ~= nil do
