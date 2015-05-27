@@ -54,9 +54,9 @@ end
 --]]
 
 TinyAVC.getUrl = function(url) -- {{{
-	local url = URL.new(url);
-	local conn = url:openStream();
-	local isr = DataInputStream.new(conn);
+	local isr = getUrlInputStream(url);
+	if not isr then return "" end;
+
 	local content = "";
 	local line = isr:readLine();
 	while line ~= nil do
@@ -64,6 +64,7 @@ TinyAVC.getUrl = function(url) -- {{{
 		line = isr:readLine();
 	end
 	isr:close();
+
 	return content;
 end
 -- }}}
