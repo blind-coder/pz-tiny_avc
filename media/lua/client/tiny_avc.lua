@@ -413,7 +413,7 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 	local list = getModDirectoryTable();
 	for _,mod in pairs(list) do
 		TinyAVC.mods[mod] = {};
-		local f = getFileInput(".."..File.separator.."mods"..File.separator..mod..File.separator.."tiny_avc.txt");
+		local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
 		if f ~= nil then
 			local line = f:readLine();
 			while line ~= nil do
