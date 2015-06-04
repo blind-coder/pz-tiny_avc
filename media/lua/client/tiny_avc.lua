@@ -1,6 +1,7 @@
 require "OptionScreens/MainScreen"
 require "ISUI/ISButton"
 require "ISUI/ISCollapsableWindow"
+require "ISUI/ISScrollingListBox"
 require "ISUI/ISPanel"
 
 function string.split(inputstr, sep) -- {{{
@@ -271,102 +272,118 @@ TinyAVC.versionIsCompatible = function(old, new) -- {{{
 	return true;
 end -- }}}
 
-TinyAVCModPanel = ISPanel:derive("TinyAVCModPanel");
-function TinyAVCModPanel:createChildren() -- {{{
-	ISPanel.createChildren(self);
-	self.urlButton = ISButton:new(self.width*0.9+1, 0, self.width*0.1-2, self:getHeight(), "URL", self, ModSelector.onOptionMouseDown);
-	self.urlButton.internal = "URL";
-	self.urlButton:initialise();
-	self.urlButton:instantiate();
-	self.urlButton:setFont(UIFont.Small);
-	self:addChild(self.urlButton);
-end
--- }}}
-function TinyAVCModPanel:setWidth(newX) -- {{{
-	if self:getWidth() == newX then return end;
-	ISPanel.setWidth(self, newX);
 
-	self.urlButton:setX(newX*0.9+1);
-	self.urlButton:setWidth(newX*0.1-2);
-end
--- }}}
-function TinyAVCModPanel:setHeight(newY) -- {{{
-	if self:getHeight() == newY then return end;
-
-	local diff = newY - self:getHeight();
-	ISPanel.setHeight(self, newY);
-	self.urlButton:setHeight(newY);
-	local ptr = self.next;
-	while ptr do
-		ptr:setY(ptr:getY()+diff);
-		ptr = ptr.next;
+TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
+function TinyAVC.ScrollingListBoxPreRender(self) -- {{{
+	self:drawRect(0, -self:getYScroll(), self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
+	if self.drawBorder then
+		self:drawRectBorder(0, -self:getYScroll(), self.width, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b)
 	end
+
+	local y = 0;
+	local alt = false;
+	if self.items == nil then
+		return;
+	end
+
+	if self.selected ~= -1 and self.selected < 1 then
+		self.selected = 1
+	elseif self.selected ~= -1 and self.selected > #self.items then
+		self.selected = #self.items
+	end
+
+	local altBg = self.altBgColor
+
+	local i = 1;
+	for k, v in ipairs(self.items) do
+		if not v.height then v.height = self.itemheight end -- compatibililty
+
+		if alt and altBg then
+			self:drawRect(0, y, self:getWidth(), v.height-1, altBg.r, altBg.g, altBg.b, altBg.a);
+		else
+
+		end
+		v.index = i;
+		local y2 = self:doDrawItem(y, v, alt);
+		v.height = y2 - y
+		y = y2
+
+		alt = not alt;
+		i = i + 1;
+	end
+
+	self:setScrollHeight((y));
+
+	self:updateSmoothScrolling()
+	self:updateTooltip()
 end
 -- }}}
-function TinyAVCModPanel:render() -- {{{
-	self.background = self:isMouseOver();
-	ISPanel.render(self);
+function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
+	item = item.item;
 
-	if self.modInfo.url ~= nil then
+	y = y + 4;
+
+	self:drawRectBorder(4, y, self:getWidth() - (4 + self.vscroll:getWidth()), 64, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b);
+
+	local x = 8;
+	if item.url ~= nil then
 		local r = 1;
 		local g = 1;
 		local b = 1;
 		local a = 1;
-		if self.modInfo.latestVersion ~= self.modInfo.version then
+		if item.latestVersion ~= item.version then
 			r = 0;
 			g = 1;
 			b = 0;
 		end
 
-		self:drawText(self.modInfo.name,                         2, 2, r, g, b, a);
-		self:drawText(self.modInfo.version,       self.width*0.6+2, 2, r, g, b, a);
-		self:drawText(self.modInfo.latestVersion, self.width*0.7+2, 2, r, g, b, a);
-		self:drawText(self.modInfo.minVersion,    self.width*0.8+2, 2, r, g, b, a);
-
-		self.urlButton.url = self.modInfo.srcUrl;
+		self:drawText(item.name,                         x, 2+y, r, g, b, a);
+		self:drawText(item.version,       self.width*0.6+x, 2+y, r, g, b, a);
+		self:drawText(item.latestVersion, self.width*0.7+x, 2+y, r, g, b, a);
+		self:drawText(item.minVersion,    self.width*0.8+x, 2+y, r, g, b, a);
 
 		local line2 = nil;
 		local line3 = nil;
-		if TinyAVC.isNewerVersion(getCore():getVersionNumber(), self.modInfo.minVersion) then
-			line2 = "You must update PZ to at least version "..self.modInfo.minVersion.." to use this mod!";
-			if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), self.modInfo.minVersion) then
-				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..self.modInfo.minVersion.."! Expect breakage!";
+		if TinyAVC.isNewerVersion(getCore():getVersionNumber(), item.minVersion) then
+			line2 = "You must update PZ to at least version "..item.minVersion.." to use this mod!";
+			if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), item.minVersion) then
+				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..item.minVersion.."! Expect breakage!";
 			end
-		elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), self.modInfo.minVersion) then
-			line2 = "This mod was built for PZ version "..self.modInfo.minVersion.."!";
-			if not TinyAVC.versionIsCompatible(self.modInfo.minVersion, getCore():getVersionNumber()) then
-				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..self.modInfo.minVersion.."! Expect breakage!";
+		elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), item.minVersion) then
+			line2 = "This mod was built for PZ version "..item.minVersion.."!";
+			if not TinyAVC.versionIsCompatible(item.minVersion, getCore():getVersionNumber()) then
+				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..item.minVersion.."! Expect breakage!";
 			end
 		end
 		if line2 ~= nil then
-			self:drawText(line2, 22, 2 + TinyAVC.lineHeight + 2, r, g, b, a);
+			self:drawText(line2, 20+x, 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
 		end
 		if line3 ~= nil then
-			self:setHeight(2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2);
-			self:drawText(line3, 22, 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2, r, g, b, a);
+			self:drawText(line3, 20+x, 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
 		end
-	else
-		self:drawText(self.modInfo.name.." does not support Tiny AVC :-(", 2, 2, 1, 0, 0, 1);
-	end
-end
--- }}}
-function TinyAVCModPanel:new(x, y, w, h, modInfo) -- {{{
-	local o = {};
-	o = ISPanel:new(x, y, w, h);
-	setmetatable(o, self)
-	self.__index = self
-	o.modInfo = modInfo;
-	o.background = true;
-	o.backgroundColor = {r=0.5, g=0.5, b=0.5, a=1};
-	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
-	return o;
-end
--- }}}
 
-TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
-function TinyAVCWindow:initialise() -- {{{
-	ISCollapsableWindow.initialise(self);
-end -- }}}
+		if item.urlButton ~= nil then
+			item.urlButton:setY(self:getYScroll()+y);
+		else
+			local x = self:getWidth() - (self.vscroll:getWidth());
+			x = x - 62;
+			item.urlButton = ISButton:new(x, self:getYScroll()+y, 62, 62, "URL", item, ModSelector.onOptionMouseDown);
+			item.urlButton.internal = "URL";
+			item.urlButton.url = item.srcUrl;
+			item.urlButton:initialise();
+			item.urlButton:instantiate();
+			item.urlButton:setFont(UIFont.Small);
+			self.parent:addChild(item.urlButton);
+		end
+		-- item.urlButton:prerender();
+		-- item.urlButton:render();
+	else
+		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 1, 0, 0, 1);
+	end
+
+	return y + 64;
+end
+-- }}}
 function TinyAVCWindow:createChildren() -- {{{
 	ISCollapsableWindow.createChildren(self);
 
@@ -381,6 +398,32 @@ function TinyAVCWindow:createChildren() -- {{{
 
 	self.headerNeedPZVer = ISButton:new(self.width*0.8, 17, self.width*0.1, 20, "Need PZ");
 	self:addChild(self.headerNeedPZVer);
+
+	self.bounds = ISPanel:new(1, 37, self.width-2, self.height-37);
+	self.bounds.prerender = function(self)
+		self:setStencilRect(0,0,self.width+1, self.height);
+		ISPanel.prerender(self);
+	end
+	self.bounds.render = function(self)
+		ISPanel.render(self);
+		self:clearStencilRect();
+	end
+	self:addChild(self.bounds);
+
+	self.contentBox = ISScrollingListBox:new(0, 0, self.bounds.width, self.bounds.height);
+	self.contentBox.itemheight = 64;
+	self.contentBox.drawBorder = true;
+	self.contentBox.doDrawItem = TinyAVCWindow.doDrawItem;
+	self.contentBox.parent = self;
+	self.contentBox:initialise();
+	self.contentBox:instantiate();
+	self.contentBox:setAnchorLeft(true);
+	self.contentBox:setAnchorRight(true);
+	self.contentBox:setAnchorTop(true);
+	self.contentBox:setAnchorBottom(true);
+	self.contentBox.parent = self.bounds;
+	self.contentBox.prerender = TinyAVC.ScrollingListBoxPreRender;
+	self.bounds:addChild(self.contentBox);
 end -- }}}
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
@@ -437,23 +480,12 @@ end
 function TinyAVCWindow:checkForUpdate() -- {{{
 	self:setVisible(true);
 	self:downloadUpdates();
-	local y = self.headerMod:getY()+self.headerMod:getHeight();
-	local lastPanel = nil;
+	ModSelector.instance.listbox:setVisible(false);
 
 	for modName,mod in pairs(TinyAVC.mods) do
 		mod.name = modName;
-		modPanel = TinyAVCModPanel:new(0, y, self:getWidth(), 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2, mod);
-		self:addChild(modPanel);
-		TinyAVC.modPanels[modPanel.ID] = modPanel;
-		modPanel.prev = lastPanel;
-		if lastPanel ~= nil then
-			lastPanel.next = modPanel;
-		end
-		lastPanel = modPanel;
-		y = y + modPanel:getHeight();
+		self.contentBox:addItem(modName, mod);
 	end
-
-	self.minimumHeight = y+15;
 end -- }}}
 function TinyAVCWindow:new (x, y, width, height) -- {{{
 	local o = {}
@@ -465,27 +497,21 @@ function TinyAVCWindow:new (x, y, width, height) -- {{{
 	o.minimumHeight = 100;
 	return o
 end -- }}}
-function TinyAVCWindow:onResize() -- {{{
-	ISCollapsableWindow.onResize(self);
-	self.headerMod:setWidth(self.width*0.6-1);
-	self.headerCurVer:setX(self.width*0.6);
-	self.headerCurVer:setWidth(self.width*0.1);
-	self.headerLastVer:setX(self.width*0.7);
-	self.headerLastVer:setWidth(self.width*0.1);
-	self.headerNeedPZVer:setX(self.width*0.8);
-	self.headerNeedPZVer:setWidth(self.width*0.1);
-
-	for _,child in pairs(TinyAVC.modPanels) do
-		child:setWidth(self.width);
-	end
+function TinyAVCWindow:onMouseDown(x, y) -- {{{
+	self:bringToTop();
+end
+-- }}}
+function TinyAVCWindow:close() -- {{{
+	ISCollapsableWindow.close(self);
+	ModSelector.instance.listbox:setVisible(true);
 end
 -- }}}
 
 TinyAVC.init = function() -- {{{
-	TinyAVC.win = TinyAVCWindow:new(100,100,600,400);
+	TinyAVC.win = TinyAVCWindow:new(ModSelector.instance.listbox:getX(), ModSelector.instance.listbox:getY(), ModSelector.instance.listbox:getWidth(), ModSelector.instance.listbox:getHeight());
 	TinyAVC.win:initialise();
 	TinyAVC.win:setVisible(false);
-	MainScreen.instance:addChild(TinyAVC.win);
+	ModSelector.instance:addChild(TinyAVC.win);
 
 	-- Position the button next to the Get Mods button
 	local x = MainScreen.instance.modSelect.getModButton:getX();
