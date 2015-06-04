@@ -181,7 +181,17 @@ TinyAVC.versionHistory = { -- {{{
 	["32.2"] = {
 		order = 28,
 		backwardsCompatible = true
+	},
+	["32.3"] = {
+		order = 29,
+		backwardsCompatible = true
+	},
+	["32.4"] = {
+		order = 30,
+		backwardsCompatible = true
 	}
+
+
 };
 -- }}}
 TinyAVC.sanitizeTISVersion = { -- {{{
@@ -214,7 +224,9 @@ TinyAVC.sanitizeTISVersion = { -- {{{
 	["Early Access v. 31.12"] = "31.12",
 	["Early Access v. 31.13"] = "31.13",
 	["Early Access v. 32.1"] = "32.1",
-	["Early Access v. 32.2"] = "32.2"
+	["Early Access v. 32.2"] = "32.2",
+	["Early Access v. 32.3"] = "32.3",
+	["Early Access v. 32.4"] = "32.4"
 };
 -- }}}
 TinyAVC.sanitizeVersion = function(ver) -- {{{
