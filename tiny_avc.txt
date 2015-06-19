@@ -1,2 +1,2 @@
-version:0.5.0
+version:0.7.0
 url:https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/latest_version.txt
