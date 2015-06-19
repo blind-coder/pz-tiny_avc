@@ -441,15 +441,16 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 
 	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
 	for _,line in pairs(string.split(content, "\n")) do
-		if luautils.stringStarts(line, "#") then next end
-		local t = string.split(line, ";");
-		versionHistory[t[0]] = { order = t[1], backwardsCompatible = (t[2] == "true") };
+		if not luautils.stringStarts(line, "#") then
+			local t = string.split(line, ";");
+			TinyAVC.versionHistory[t[1]] = { order = t[2], backwardsCompatible = (t[3] == "true") };
+		end
 	end
 
 	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
 	for _,line in pairs(string.split(content, "\n")) do
 		local t = string.split(line, ";");
-		sanitizeTISVersion[t[0]] = t[1];
+		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
 	end
 
 	TinyAVC.checked = true;
