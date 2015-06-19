@@ -70,6 +70,7 @@ TinyAVC.getUrl = function(url) -- {{{
 end
 -- }}}
 TinyAVC.versionHistory = { -- {{{
+--[[
 	["1"] = {
 		order = 1,
 		backwardsCompatible = false
@@ -189,12 +190,24 @@ TinyAVC.versionHistory = { -- {{{
 	["32.4"] = {
 		order = 30,
 		backwardsCompatible = true
+	},
+	["32.5"] = {
+		order = 31,
+		backwardsCompatible = true
+	},
+	["32.6"] = {
+		order = 32,
+		backwardsCompatible = true
+	},
+	["32.7"] = {
+		order = 33,
+		backwardsCompatible = true
 	}
-
-
+--]]
 };
 -- }}}
 TinyAVC.sanitizeTISVersion = { -- {{{
+--[[
 	-- Somewhere up here is 2.9.9.6
 	["2.9.9.17"]  =  "1", -- Build from around 2013-09-09, no idea where else to put this. Might also be 17d, idk.
 	["17 (0008)"] =  "8", -- actually 2.9.9.17 Build 8
@@ -226,7 +239,11 @@ TinyAVC.sanitizeTISVersion = { -- {{{
 	["Early Access v. 32.1"] = "32.1",
 	["Early Access v. 32.2"] = "32.2",
 	["Early Access v. 32.3"] = "32.3",
-	["Early Access v. 32.4"] = "32.4"
+	["Early Access v. 32.4"] = "32.4",
+	["Early Access v. 32.5"] = "32.5",
+	["Early Access v. 32.6"] = "32.6",
+	["Early Access v. 32.7"] = "32.7"
+--]]
 };
 -- }}}
 TinyAVC.sanitizeVersion = function(ver) -- {{{
