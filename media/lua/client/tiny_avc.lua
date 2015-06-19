@@ -27,7 +27,7 @@ TinyAVC.checked = false;
 TinyAVC.content = nil;
 TinyAVC.modPanels = {};
 TinyAVC.lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
---[[
+---[[
 TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
 	if lvl == nil then lvl = 0 end
 	if lvl >= 10 then return "Stack overflow ("..tostring(o)..")" end
@@ -284,7 +284,6 @@ TinyAVC.versionIsCompatible = function(old, new) -- {{{
 	return true;
 end -- }}}
 
-
 TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
 function TinyAVC.ScrollingListBoxPreRender(self) -- {{{
 	self:drawRect(0, -self:getYScroll(), self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
@@ -439,6 +438,21 @@ function TinyAVCWindow:createChildren() -- {{{
 end -- }}}
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
+
+	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
+	for _,line in pairs(string.split(content, "\n")) do
+		if not luautils.stringStarts(line, "#") then
+			local t = string.split(line, ";");
+			TinyAVC.versionHistory[t[1]] = { order = t[2], backwardsCompatible = (t[3] == "true") };
+		end
+	end
+
+	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
+	for _,line in pairs(string.split(content, "\n")) do
+		local t = string.split(line, ";");
+		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
+	end
+
 	TinyAVC.checked = true;
 	TinyAVC.content = "";
 	local list = getModDirectoryTable();
