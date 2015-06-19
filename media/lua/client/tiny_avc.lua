@@ -439,14 +439,14 @@ end -- }}}
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
 
-	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/tiny_avc/feature_autoload/versionHistory.txt");
+	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
 	for _,line in pairs(string.split(content, "\n")) do
 		if luautils.stringStarts(line, "#") then next end
 		local t = string.split(line, ";");
 		versionHistory[t[0]] = { order = t[1], backwardsCompatible = (t[2] == "true") };
 	end
 
-	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/tiny_avc/feature_autoload/sanitizeVersion.txt");
+	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
 	for _,line in pairs(string.split(content, "\n")) do
 		local t = string.split(line, ";");
 		sanitizeTISVersion[t[0]] = t[1];
