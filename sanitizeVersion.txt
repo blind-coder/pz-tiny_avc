@@ -31,3 +31,5 @@ Early Access v. 32.4;32.4
 Early Access v. 32.5;32.5
 Early Access v. 32.6;32.6
 Early Access v. 32.7;32.7
+Early Access v. 32.8;32.8
+Early Access v. 32.9;32.9
