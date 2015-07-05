@@ -453,6 +453,13 @@ function TinyAVCWindow:createChildren() -- {{{
 	self.contentBox.prerender = TinyAVC.ScrollingListBoxPreRender;
 	self.bounds:addChild(self.contentBox);
 end -- }}}
+
+local TAG_VERSION     = "modversion=";
+local TAG_PZ_VERSION  = "pzversion=";
+local TAG_VERSION_URL = "versionurl=";
+local TAG_MOD_URL     = "modurl=";
+local TAG_DELIMITER   = "=";
+
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
 
@@ -473,47 +480,42 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 	TinyAVC.checked = true;
 	TinyAVC.content = "";
 	local list = getModDirectoryTable();
-	for _,mod in pairs(list) do
+	for _, mod in pairs(list) do
 		TinyAVC.mods[mod] = {};
-		local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
-		if f ~= nil then
-			local line = f:readLine();
-			while line ~= nil do
-				if string.starts(line, "version:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].version = r[2];
+		local file = getFileInput("..".."/".."mods".."/"..mod.."/".."mod.info");
+		if file then
+			while true do
+				local line = file:readLine();
+				if not line then
+					file:close();
+					break;
 				end
-				if string.starts(line, "url:") then
-					local r = string.split(line, ":")
-					TinyAVC.mods[mod].url = r[2]..":"..r[3];
+				if string.starts(line, TAG_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].version = snippet[2];
+				elseif string.starts(line, TAG_VERSION_URL) then
+					local snippet = string.split(line, TAG_DELIMITER)
+					TinyAVC.mods[mod].url = snippet[2];
 				end
-				line = f:readLine();
 			end
-			f:close();
 		end
 
-		if TinyAVC.mods[mod].url ~= nil then
+		if TinyAVC.mods[mod].url then
 			TinyAVC.mods[mod].latestVersion = "ERR";
 			TinyAVC.mods[mod].minVersion = "ERR";
 			TinyAVC.mods[mod].srcUrl = "ERR";
+
 			local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
-			--[[ Format is:
-			--version:0.9.5
-			--minVersion:30.16
-			--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
-			--]]
-			for _,line in pairs(string.split(content, "\n")) do
-				if string.starts(line, "version:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].latestVersion = r[2];
-				end
-				if string.starts(line, "minVersion:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].minVersion = r[2];
-				end
-				if string.starts(line, "url:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
+			for _, line in pairs(string.split(content, "\n")) do
+				if string.starts(line, TAG_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].latestVersion = snippet[2];
+				elseif string.starts(line, TAG_PZ_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].minVersion = snippet[2];
+				elseif string.starts(line, TAG_MOD_URL) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].srcUrl = snippet[2];
 				end
 			end
 		end
