@@ -355,19 +355,16 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 
 	local x = 8;
 	if item.url ~= nil then
-		local r = 1;
-		local g = 1;
-		local b = 1;
-		local a = 1;
+		local r, g, b, a = 1, 1, 1, 1;
 		if item.latestVersion ~= item.version then
-			r = 0;
-			g = 1;
-			b = 0;
+			self:drawText(item.name,                         x, 2 + y,   r, 0.6, 0.0, a);
+			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r, 0.6, 0.0, a);
+			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, 0.0,   g, 0.0, a);
+		else
+			self:drawText(item.name,                         x, 2 + y, r, g, b, a);
+			self:drawText(item.version,       self.width*0.6+x, 2 + y, r, g, b, a);
+			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, r, g, b, a);
 		end
-
-		self:drawText(item.name,                         x, 2+y, r, g, b, a);
-		self:drawText(item.version,       self.width*0.6+x, 2+y, r, g, b, a);
-		self:drawText(item.latestVersion, self.width*0.7+x, 2+y, r, g, b, a);
 		self:drawText(item.minVersion,    self.width*0.8+x, 2+y, r, g, b, a);
 
 		local line2 = nil;
