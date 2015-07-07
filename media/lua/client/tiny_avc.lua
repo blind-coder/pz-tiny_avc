@@ -458,56 +458,54 @@ local TAG_MOD_URL     = "modurl=";
 local TAG_DELIMITER   = "=";
 
 -- @deprecated Will be removed in future versions.
-local function assureBackwardsCompatibility(mod)
+local function assureBackwardsCompatibility(mod) -- {{{
 	TinyAVC.checked = true;
 	TinyAVC.content = "";
-	local list = getModDirectoryTable();
-	for _,mod in pairs(list) do
-		TinyAVC.mods[mod] = {};
-		local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
-		if f ~= nil then
-			local line = f:readLine();
-			while line ~= nil do
-				if string.starts(line, "version:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].version = r[2];
-				end
-				if string.starts(line, "url:") then
-					local r = string.split(line, ":")
-					TinyAVC.mods[mod].url = r[2]..":"..r[3];
-				end
-				line = f:readLine();
+	TinyAVC.mods[mod] = {};
+	local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
+	if f ~= nil then
+		local line = f:readLine();
+		while line ~= nil do
+			if string.starts(line, "version:") then
+				local r = string.split(line, ":");
+				TinyAVC.mods[mod].version = r[2];
 			end
-			f:close();
+			if string.starts(line, "url:") then
+				local r = string.split(line, ":")
+				TinyAVC.mods[mod].url = r[2]..":"..r[3];
+			end
+			line = f:readLine();
 		end
+		f:close();
+	end
 
-		if TinyAVC.mods[mod].url ~= nil then
-			TinyAVC.mods[mod].latestVersion = "ERR";
-			TinyAVC.mods[mod].minVersion = "ERR";
-			TinyAVC.mods[mod].srcUrl = "ERR";
-			local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
-			--[[ Format is:
-			--version:0.9.5
-			--minVersion:30.16
-			--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
-			--]]
-			for _,line in pairs(string.split(content, "\n")) do
-				if string.starts(line, "version:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].latestVersion = r[2];
-				end
-				if string.starts(line, "minVersion:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].minVersion = r[2];
-				end
-				if string.starts(line, "url:") then
-					local r = string.split(line, ":");
-					TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
-				end
+	if TinyAVC.mods[mod].url ~= nil then
+		TinyAVC.mods[mod].latestVersion = "ERR";
+		TinyAVC.mods[mod].minVersion = "ERR";
+		TinyAVC.mods[mod].srcUrl = "ERR";
+		local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
+		--[[ Format is:
+		--version:0.9.5
+		--minVersion:30.16
+		--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
+		--]]
+		for _,line in pairs(string.split(content, "\n")) do
+			if string.starts(line, "version:") then
+				local r = string.split(line, ":");
+				TinyAVC.mods[mod].latestVersion = r[2];
+			end
+			if string.starts(line, "minVersion:") then
+				local r = string.split(line, ":");
+				TinyAVC.mods[mod].minVersion = r[2];
+			end
+			if string.starts(line, "url:") then
+				local r = string.split(line, ":");
+				TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
 			end
 		end
 	end
 end
+-- }}}
 
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
