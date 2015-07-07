@@ -391,9 +391,8 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 		if item.urlButton ~= nil then
 			item.urlButton:setY(self:getYScroll()+y);
 		else
-			local x = self:getWidth() - (self.vscroll:getWidth());
-			x = x - 62;
-			item.urlButton = ISButton:new(x, self:getYScroll()+y, 62, 62, "URL", item, ModSelector.onOptionMouseDown);
+			local x = self:getWidth() * 0.9;
+			item.urlButton = ISButton:new(x, self:getYScroll()+y, self:getWidth() - x - self.vscroll:getWidth(), 62, "URL", item, ModSelector.onOptionMouseDown);
 			item.urlButton.internal = "URL";
 			item.urlButton.url = item.srcUrl;
 			item.urlButton:initialise();
