@@ -355,19 +355,16 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 
 	local x = 8;
 	if item.url ~= nil then
-		local r = 1;
-		local g = 1;
-		local b = 1;
-		local a = 1;
+		local r, g, b, a = 1, 1, 1, 1;
 		if item.latestVersion ~= item.version then
-			r = 0;
-			g = 1;
-			b = 0;
+			self:drawText(item.name,                         x, 2 + y,   r, 0.6, 0.0, a);
+			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r, 0.6, 0.0, a);
+			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, 0.0,   g, 0.0, a);
+		else
+			self:drawText(item.name,                         x, 2 + y, r, g, b, a);
+			self:drawText(item.version,       self.width*0.6+x, 2 + y, r, g, b, a);
+			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, r, g, b, a);
 		end
-
-		self:drawText(item.name,                         x, 2+y, r, g, b, a);
-		self:drawText(item.version,       self.width*0.6+x, 2+y, r, g, b, a);
-		self:drawText(item.latestVersion, self.width*0.7+x, 2+y, r, g, b, a);
 		self:drawText(item.minVersion,    self.width*0.8+x, 2+y, r, g, b, a);
 
 		local line2 = nil;
@@ -453,23 +450,15 @@ function TinyAVCWindow:createChildren() -- {{{
 	self.contentBox.prerender = TinyAVC.ScrollingListBoxPreRender;
 	self.bounds:addChild(self.contentBox);
 end -- }}}
-function TinyAVCWindow:downloadUpdates() -- {{{
-	if TinyAVC.checked then return end;
 
-	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
-	for _,line in pairs(string.split(content, "\n")) do
-		if not luautils.stringStarts(line, "#") then
-			local t = string.split(line, ";");
-			TinyAVC.versionHistory[t[1]] = { order = t[2], backwardsCompatible = (t[3] == "true") };
-		end
-	end
+local TAG_VERSION     = "modversion=";
+local TAG_PZ_VERSION  = "pzversion=";
+local TAG_VERSION_URL = "versionurl=";
+local TAG_MOD_URL     = "modurl=";
+local TAG_DELIMITER   = "=";
 
-	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
-	for _,line in pairs(string.split(content, "\n")) do
-		local t = string.split(line, ";");
-		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
-	end
-
+-- @deprecated Will be removed in future versions.
+local function assureBackwardsCompatibility(mod)
 	TinyAVC.checked = true;
 	TinyAVC.content = "";
 	local list = getModDirectoryTable();
@@ -516,6 +505,72 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 					TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
 				end
 			end
+		end
+	end
+end
+
+function TinyAVCWindow:downloadUpdates() -- {{{
+	if TinyAVC.checked then return end;
+
+	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
+	for _,line in pairs(string.split(content, "\n")) do
+		if not luautils.stringStarts(line, "#") then
+			local t = string.split(line, ";");
+			TinyAVC.versionHistory[t[1]] = { order = t[2], backwardsCompatible = (t[3] == "true") };
+		end
+	end
+
+	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
+	for _,line in pairs(string.split(content, "\n")) do
+		local t = string.split(line, ";");
+		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
+	end
+
+	TinyAVC.checked = true;
+	TinyAVC.content = "";
+	local list = getModDirectoryTable();
+	for _, mod in pairs(list) do
+		TinyAVC.mods[mod] = {};
+		local file = getFileInput("..".."/".."mods".."/"..mod.."/".."mod.info");
+		if file then
+			while true do
+				local line = file:readLine();
+				if not line then
+					file:close();
+					break;
+				end
+				if string.starts(line, TAG_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].version = snippet[2];
+				elseif string.starts(line, TAG_VERSION_URL) then
+					local snippet = string.split(line, TAG_DELIMITER)
+					TinyAVC.mods[mod].url = snippet[2];
+				end
+			end
+		end
+
+		if TinyAVC.mods[mod].url then
+			TinyAVC.mods[mod].latestVersion = "ERR";
+			TinyAVC.mods[mod].minVersion = "ERR";
+			TinyAVC.mods[mod].srcUrl = "ERR";
+
+			local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
+			for _, line in pairs(string.split(content, "\n")) do
+				if string.starts(line, TAG_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].latestVersion = snippet[2];
+				elseif string.starts(line, TAG_PZ_VERSION) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].minVersion = snippet[2];
+				elseif string.starts(line, TAG_MOD_URL) then
+					local snippet = string.split(line, TAG_DELIMITER);
+					TinyAVC.mods[mod].srcUrl = snippet[2];
+				end
+			end
+
+		else
+			-- @deprecated Will be removed in future versions.
+			assureBackwardsCompatibility(mod);
 		end
 	end
 end
