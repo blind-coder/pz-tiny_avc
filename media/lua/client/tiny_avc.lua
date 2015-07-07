@@ -55,6 +55,7 @@ end
 --]]
 
 TinyAVC.getUrl = function(url) -- {{{
+	print("TINY_AVC: Downloading "..url);
 	local isr = getUrlInputStream(url);
 	if not isr then return "" end;
 
