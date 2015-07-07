@@ -567,10 +567,9 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 					TinyAVC.mods[mod].srcUrl = snippet[2];
 				end
 			end
-		end
 
-		-- @deprecated Will be removed in future versions.
-		if TinyAVC.mods[mod].latestVersion == "ERR" or TinyAVC.mods[mod].minVersion == 'ERR' or TinyAVC.mods[mod].srcUrl == 'ERR' then
+		else
+			-- @deprecated Will be removed in future versions.
 			assureBackwardsCompatibility(mod);
 		end
 	end
