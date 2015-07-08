@@ -24,32 +24,6 @@ TinyAVC.checked = false;
 TinyAVC.content = nil;
 TinyAVC.modPanels = {};
 TinyAVC.lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
----[[
-TinyAVC.dump = function(o, lvl) -- {{{ Small function to dump an object.
-	if lvl == nil then lvl = 0 end
-	if lvl >= 10 then return "Stack overflow ("..tostring(o)..")" end
-
-	if type(o) == 'table' then
-		local s = '{ '
-		for k,v in pairs(o) do
-			if k == "prev" or k == "next" then
-				s = s .. '['..k..'] = '..tostring(v);
-			else
-				if type(k) ~= 'number' then k = '"'..k..'"' end
-				s = s .. '['..k..'] = ' .. TinyAVC.dump(v, lvl + 1) .. ','
-			end
-		end
-		return s .. '} '
-	else
-		return tostring(o)
-	end
-end
--- }}}
-TinyAVC.pline = function (text) -- {{{ Print text to logfile
-	print(tostring(text));
-end
--- }}}
---]]
 
 TinyAVC.getUrl = function(url) -- {{{
 	print("TINY_AVC: Downloading "..url);
