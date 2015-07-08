@@ -3,6 +3,7 @@ require "ISUI/ISButton"
 require "ISUI/ISCollapsableWindow"
 require "ISUI/ISScrollingListBox"
 require "ISUI/ISPanel"
+require "luautils";
 
 function string.split(inputstr, sep) -- {{{
 	if sep == nil then
@@ -14,10 +15,6 @@ function string.split(inputstr, sep) -- {{{
 		i = i + 1
 	end
 	return t
-end
--- }}}
-function string.starts(String,Start) -- {{{
-	return string.sub(String,1,string.len(Start))==Start
 end
 -- }}}
 
@@ -403,7 +400,7 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 		-- item.urlButton:prerender();
 		-- item.urlButton:render();
 	else
-		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 1, 0, 0, 1);
+		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 1.0, 1.0, 1.0, 0.2);
 	end
 
 	return y + 64;
@@ -466,11 +463,11 @@ local function assureBackwardsCompatibility(mod) -- {{{
 	if f ~= nil then
 		local line = f:readLine();
 		while line ~= nil do
-			if string.starts(line, "version:") then
+			if luautils.stringStarts(line, "version:") then
 				local r = string.split(line, ":");
 				TinyAVC.mods[mod].version = r[2];
 			end
-			if string.starts(line, "url:") then
+			if luautils.stringStarts(line, "url:") then
 				local r = string.split(line, ":")
 				TinyAVC.mods[mod].url = r[2]..":"..r[3];
 			end
@@ -490,15 +487,15 @@ local function assureBackwardsCompatibility(mod) -- {{{
 		--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
 		--]]
 		for _,line in pairs(string.split(content, "\n")) do
-			if string.starts(line, "version:") then
+			if luautils.stringStarts(line, "version:") then
 				local r = string.split(line, ":");
 				TinyAVC.mods[mod].latestVersion = r[2];
 			end
-			if string.starts(line, "minVersion:") then
+			if luautils.stringStarts(line, "minVersion:") then
 				local r = string.split(line, ":");
 				TinyAVC.mods[mod].minVersion = r[2];
 			end
-			if string.starts(line, "url:") then
+			if luautils.stringStarts(line, "url:") then
 				local r = string.split(line, ":");
 				TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
 			end
@@ -537,10 +534,10 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 					file:close();
 					break;
 				end
-				if string.starts(line, TAG_VERSION) then
+				if luautils.stringStarts(line, TAG_VERSION) then
 					local snippet = string.split(line, TAG_DELIMITER);
 					TinyAVC.mods[mod].version = snippet[2];
-				elseif string.starts(line, TAG_VERSION_URL) then
+				elseif luautils.stringStarts(line, TAG_VERSION_URL) then
 					local snippet = string.split(line, TAG_DELIMITER)
 					TinyAVC.mods[mod].url = snippet[2];
 				end
@@ -554,13 +551,13 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 
 			local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
 			for _, line in pairs(string.split(content, "\n")) do
-				if string.starts(line, TAG_VERSION) then
+				if luautils.stringStarts(line, TAG_VERSION) then
 					local snippet = string.split(line, TAG_DELIMITER);
 					TinyAVC.mods[mod].latestVersion = snippet[2];
-				elseif string.starts(line, TAG_PZ_VERSION) then
+				elseif luautils.stringStarts(line, TAG_PZ_VERSION) then
 					local snippet = string.split(line, TAG_DELIMITER);
 					TinyAVC.mods[mod].minVersion = snippet[2];
-				elseif string.starts(line, TAG_MOD_URL) then
+				elseif luautils.stringStarts(line, TAG_MOD_URL) then
 					local snippet = string.split(line, TAG_DELIMITER);
 					TinyAVC.mods[mod].srcUrl = snippet[2];
 				end
