@@ -272,6 +272,31 @@ TinyAVC.versionIsCompatible = function(old, new) -- {{{
 	end
 	return true;
 end -- }}}
+TinyAVC.compareMods = function(_a, _b)--{{{
+	a = TinyAVC.mods[_a];
+	b = TinyAVC.mods[_b];
+
+	if a.url == nil and b.url ~= nil then return false end
+	if a.url ~= nil and b.url == nil then return true end
+
+	return _a:upper() < _b:upper(); -- case-insensitive compare
+end--}}}
+TinyAVC.modsSorted = function()--{{{
+	if not TinyAVC.checked then return nil end
+	local a = {}
+	for n in pairs(TinyAVC.mods) do table.insert(a, n) end
+	table.sort(a, TinyAVC.compareMods)
+	local i = 0 -- iterator variable
+	local iter = function () -- iterator function
+		i = i + 1
+		if a[i] == nil then
+			return nil
+		else
+			return a[i], TinyAVC.mods[a[i]]
+		end
+	end
+	return iter
+end--}}}
 
 TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
 function TinyAVC.ScrollingListBoxPreRender(self) -- {{{
@@ -549,7 +574,7 @@ function TinyAVCWindow:checkForUpdate() -- {{{
 	self:downloadUpdates();
 	ModSelector.instance.listbox:setVisible(false);
 
-	for modName,mod in pairs(TinyAVC.mods) do
+	for modName,mod in TinyAVC.modsSorted() do
 		mod.name = modName;
 		self.contentBox:addItem(modName, mod);
 	end
