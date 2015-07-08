@@ -400,7 +400,7 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 		-- item.urlButton:prerender();
 		-- item.urlButton:render();
 	else
-		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 1, 0, 0, 1);
+		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 1.0, 1.0, 1.0, 0.2);
 	end
 
 	return y + 64;
