@@ -480,6 +480,7 @@ end
 
 function TinyAVCWindow:downloadUpdates() -- {{{
 	if TinyAVC.checked then return end;
+	TinyAVC.checked = true;
 
 	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
 	for _,line in pairs(string.split(content, "\n")) do
@@ -495,7 +496,6 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
 	end
 
-	TinyAVC.checked = true;
 	TinyAVC.content = "";
 	local list = getModDirectoryTable();
 	for _, mod in pairs(list) do
