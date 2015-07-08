@@ -18,7 +18,7 @@ versionurl=https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/mod.
 ```
 
 - ```modversion``` This is the current version of your mod.
-
 - ```pzversion``` The version of Project Zomboid the mod has been developed for.
-
-- ```versionurl``` A url which points to a online file containing the version information. TinyAVC will use this file to fetch the latest information about your mod. The file has to contain the ```modversion```, ```pzversion``` and ```versionurl``` fields. If you want to notify your users of a new version you only have to change the ```modversion``` value and Tiny AVC will display a notification.
+- ```versionurl``` A url which points to a online file containing the version information.  
+TinyAVC will use this file to fetch the latest information about your mod. The file has to contain the ```modversion``` and ```pzversion``` fields. If you want to notify your users of a new version you only have to change the ```modversion``` value and Tiny AVC will display a notification.  
+As this file has the same syntax as the mod.info file, you can simply use that.
