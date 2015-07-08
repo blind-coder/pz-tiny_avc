@@ -346,9 +346,8 @@ end
 function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 	item = item.item;
 
+	local height = 4 + TinyAVC.lineHeight;
 	y = y + 4;
-
-	self:drawRectBorder(4, y, self:getWidth() - (4 + self.vscroll:getWidth()), 64, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b);
 
 	local x = 8;
 	if item.url ~= nil then
@@ -358,11 +357,11 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r, 0.6, 0.0, a);
 			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, 0.0,   g, 0.0, a);
 		else
-			self:drawText(item.name,                         x, 2 + y, r, g, b, a);
-			self:drawText(item.version,       self.width*0.6+x, 2 + y, r, g, b, a);
-			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, r, g, b, a);
+			self:drawText(item.name,                         x, 2 + y,   r,   g,   b, a);
+			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r,   g,   b, a);
+			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y,   r,   g,   b, a);
 		end
-		self:drawText(item.minVersion,    self.width*0.8+x, 2+y, r, g, b, a);
+		self:drawText(item.minVersion,      self.width*0.8+x, 2 + y,   r,   g,   b, a);
 
 		local line2 = nil;
 		local line3 = nil;
@@ -378,9 +377,11 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 			end
 		end
 		if line2 ~= nil then
+			height = height + 2 + TinyAVC.lineHeight;
 			self:drawText(line2, 20+x, 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
 		end
 		if line3 ~= nil then
+			height = height + 2 + TinyAVC.lineHeight;
 			self:drawText(line3, 20+x, 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
 		end
 
@@ -388,7 +389,7 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 			item.urlButton:setY(self:getYScroll()+y);
 		else
 			local x = self:getWidth() * 0.9;
-			item.urlButton = ISButton:new(x, self:getYScroll()+y, self:getWidth() - x - self.vscroll:getWidth(), 62, "URL", item, ModSelector.onOptionMouseDown);
+			item.urlButton = ISButton:new(x, self:getYScroll()+y, self:getWidth() - x - self.vscroll:getWidth(), height, "URL", item, ModSelector.onOptionMouseDown);
 			item.urlButton.internal = "URL";
 			item.urlButton.url = item.srcUrl;
 			item.urlButton:initialise();
@@ -402,7 +403,9 @@ function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
 		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 0.3, 0.3, 0.3, 1.0);
 	end
 
-	return y + 64;
+	self:drawRectBorder(4, y, self:getWidth() - (4 + self.vscroll:getWidth()), height, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b);
+
+	return y + height;
 end
 -- }}}
 function TinyAVCWindow:createChildren() -- {{{
