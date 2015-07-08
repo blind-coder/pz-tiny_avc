@@ -5,7 +5,7 @@ Tiny AVC (Tiny **A**utomated **V**ersion **C**hecker) is a modding tool for [Pro
 ## For Players
 You can [install](http://theindiestone.com/forums/index.php/topic/1395-) Tiny AVC like any other mod you use. Once you open the mod selection screen in the game, you should see a button called "Check for updates". Once you press it Tiny AVC will check the installed mods and display information about their current status:
 
-![preview](https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/poster.png)
+![preview](https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/tiny_avc_poster.png)
 
 ## For Modders
 
