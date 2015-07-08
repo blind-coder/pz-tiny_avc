@@ -1,32 +1,21 @@
 require "OptionScreens/MainScreen"
+require "OptionScreens/ModSelector"
 require "ISUI/ISButton"
 require "ISUI/ISCollapsableWindow"
 require "ISUI/ISScrollingListBox"
 require "ISUI/ISPanel"
 require "luautils";
 
-function string.split(inputstr, sep) -- {{{
-	if sep == nil then
-		sep = "%s"
-	end
-	local t={} ; i=1
-	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-		t[i] = str
-		i = i + 1
-	end
-	return t
-end
--- }}}
-
 TinyAVC = {};
 TinyAVC.mods = {};
-TinyAVC.checked = false;
-TinyAVC.content = nil;
-TinyAVC.modPanels = {};
 TinyAVC.lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
+TinyAVC.TAG_VERSION     = "modversion=";
+TinyAVC.TAG_PZ_VERSION  = "pzversion=";
+TinyAVC.TAG_VERSION_URL = "versionurl=";
+TinyAVC.TAG_MOD_URL     = "modurl=";
+TinyAVC.TAG_DELIMITER   = "=";
 
 TinyAVC.getUrl = function(url) -- {{{
-	print("TINY_AVC: Downloading "..url);
 	local isr = getUrlInputStream(url);
 	if not isr then return "" end;
 
@@ -41,183 +30,8 @@ TinyAVC.getUrl = function(url) -- {{{
 	return content;
 end
 -- }}}
-TinyAVC.versionHistory = { -- {{{
---[[
-	["1"] = {
-		order = 1,
-		backwardsCompatible = false
-	},
-	["8"] = {
-		order = 2,
-		backwardsCompatible = false
-	},
-	["14"] = {
-		order = 3,
-		backwardsCompatible = false
-	},
-	["19"] = {
-		order = 4,
-		backwardsCompatible = false
-	},
-	["20"] = {
-		order = 5,
-		backwardsCompatible = false
-	},
-	["21"] = {
-		order = 6,
-		backwardsCompatible = false
-	},
-	["22"] = {
-		order = 7,
-		backwardsCompatible = false
-	},
-	["23"] = {
-		order = 8,
-		backwardsCompatible = false
-	},
-	["24"] = {
-		order = 9,
-		backwardsCompatible = false
-	},
-	["28"] = {
-		order = 10,
-		backwardsCompatible = false
-	},
-	["29.3"] = {
-		order = 11,
-		backwardsCompatible = false
-	},
-	["30.16"] = {
-		order = 12,
-		backwardsCompatible = false
-	},
-	["31"] = {
-		order = 13,
-		backwardsCompatible = true
-	},
-	["31.1"] = {
-		order = 14,
-		backwardsCompatible = true
-	},
-	["31.2"] = {
-		order = 15,
-		backwardsCompatible = true
-	},
-	["31.3"] = {
-		order = 16,
-		backwardsCompatible = true
-	},
-	["31.4"] = {
-		order = 17,
-		backwardsCompatible = true
-	},
-	["31.5"] = {
-		order = 18,
-		backwardsCompatible = true
-	},
-	["31.6"] = {
-		order = 19,
-		backwardsCompatible = true
-	},
-	["31.7"] = {
-		order = 20,
-		backwardsCompatible = true
-	},
-	["31.8"] = {
-		order = 21,
-		backwardsCompatible = true
-	},
-	["31.9"] = {
-		order = 22,
-		backwardsCompatible = true
-	},
-	["31.10"] = {
-		order = 23,
-		backwardsCompatible = true
-	},
-	["31.11"] = {
-		order = 24,
-		backwardsCompatible = true
-	},
-	["31.12"] = {
-		order = 25,
-		backwardsCompatible = true
-	},
-	["31.13"] = {
-		order = 26,
-		backwardsCompatible = true
-	},
-	["32.1"] = {
-		order = 27,
-		backwardsCompatible = false
-	},
-	["32.2"] = {
-		order = 28,
-		backwardsCompatible = true
-	},
-	["32.3"] = {
-		order = 29,
-		backwardsCompatible = true
-	},
-	["32.4"] = {
-		order = 30,
-		backwardsCompatible = true
-	},
-	["32.5"] = {
-		order = 31,
-		backwardsCompatible = true
-	},
-	["32.6"] = {
-		order = 32,
-		backwardsCompatible = true
-	},
-	["32.7"] = {
-		order = 33,
-		backwardsCompatible = true
-	}
---]]
-};
--- }}}
-TinyAVC.sanitizeTISVersion = { -- {{{
---[[
-	-- Somewhere up here is 2.9.9.6
-	["2.9.9.17"]  =  "1", -- Build from around 2013-09-09, no idea where else to put this. Might also be 17d, idk.
-	["17 (0008)"] =  "8", -- actually 2.9.9.17 Build 8
-	["17 (0014)"] = "14", -- actually 2.9.9.17 Build 14
-	["Build: 19"] = "19", -- actually 2.9.9.17 Build 19
-	["17 (0020)"] = "20", -- actually 2.9.9.17 Build 20
-	["2.9.9.17b"] = "21", -- just counting up from here on
-	-- ["2.9.9.17"] -- this is actually 17d, but it didn't get the suffix. This means a collision with the first line in here.
-	["2.9.9.17e"] = "22",
-	["2.9.9.17e"] = "23",
-	["2.9.9.17g (0007)"] = "24", -- 2.9.9.17 Build g Subbuild 0007 and ohlordpleasekillmenow.
-	["Build 28"]  = "28",
-	["Early Access v. 29.3"] = "29.3",
-	["Early Access v. 30.16"] = "30.16",
-	["Early Access v. 31"] = "31",
-	["Early Access v. 31.1"] = "31.1",
-	["Early Access v. 31.2"] = "31.2",
-	["Early Access v. 31.3"] = "31.3",
-	["Early Access v. 31.4"] = "31.4",
-	["Early Access v. 31.5"] = "31.5",
-	["Early Access v. 31.6"] = "31.6",
-	["Early Access v. 31.7"] = "31.7",
-	["Early Access v. 31.8"] = "31.8",
-	["Early Access v. 31.9"] = "31.9",
-	["Early Access v. 31.10"] = "31.10",
-	["Early Access v. 31.11"] = "31.11",
-	["Early Access v. 31.12"] = "31.12",
-	["Early Access v. 31.13"] = "31.13",
-	["Early Access v. 32.1"] = "32.1",
-	["Early Access v. 32.2"] = "32.2",
-	["Early Access v. 32.3"] = "32.3",
-	["Early Access v. 32.4"] = "32.4",
-	["Early Access v. 32.5"] = "32.5",
-	["Early Access v. 32.6"] = "32.6",
-	["Early Access v. 32.7"] = "32.7"
---]]
-};
--- }}}
+TinyAVC.versionHistory = {};
+TinyAVC.sanitizeTISVersion = {};
 TinyAVC.sanitizeVersion = function(ver) -- {{{
 	if TinyAVC.sanitizeTISVersion[ver] ~= nil then
 		ver = TinyAVC.sanitizeTISVersion[ver];
@@ -272,205 +86,20 @@ TinyAVC.versionIsCompatible = function(old, new) -- {{{
 	end
 	return true;
 end -- }}}
-TinyAVC.compareMods = function(_a, _b)--{{{
-	a = TinyAVC.mods[_a];
-	b = TinyAVC.mods[_b];
-
-	if a.url == nil and b.url ~= nil then return false end
-	if a.url ~= nil and b.url == nil then return true end
-
-	return _a:upper() < _b:upper(); -- case-insensitive compare
-end--}}}
-TinyAVC.modsSorted = function()--{{{
-	if not TinyAVC.checked then return nil end
-	local a = {}
-	for n in pairs(TinyAVC.mods) do table.insert(a, n) end
-	table.sort(a, TinyAVC.compareMods)
-	local i = 0 -- iterator variable
-	local iter = function () -- iterator function
-		i = i + 1
-		if a[i] == nil then
-			return nil
-		else
-			return a[i], TinyAVC.mods[a[i]]
-		end
-	end
-	return iter
-end--}}}
-
-TinyAVCWindow = ISCollapsableWindow:derive("TinyAVCWindow");
-function TinyAVC.ScrollingListBoxPreRender(self) -- {{{
-	self:drawRect(0, -self:getYScroll(), self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
-	if self.drawBorder then
-		self:drawRectBorder(0, -self:getYScroll(), self.width, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b)
-	end
-
-	local y = 0;
-	local alt = false;
-	if self.items == nil then
-		return;
-	end
-
-	if self.selected ~= -1 and self.selected < 1 then
-		self.selected = 1
-	elseif self.selected ~= -1 and self.selected > #self.items then
-		self.selected = #self.items
-	end
-
-	local altBg = self.altBgColor
-
-	local i = 1;
-	for k, v in ipairs(self.items) do
-		if not v.height then v.height = self.itemheight end -- compatibililty
-
-		if alt and altBg then
-			self:drawRect(0, y, self:getWidth(), v.height-1, altBg.r, altBg.g, altBg.b, altBg.a);
-		else
-
-		end
-		v.index = i;
-		local y2 = self:doDrawItem(y, v, alt);
-		v.height = y2 - y
-		y = y2
-
-		alt = not alt;
-		i = i + 1;
-	end
-
-	self:setScrollHeight((y));
-
-	self:updateSmoothScrolling()
-	self:updateTooltip()
-end
--- }}}
-function TinyAVCWindow:doDrawItem(y, item, alt) -- {{{
-	item = item.item;
-
-	local height = 4 + TinyAVC.lineHeight;
-	y = y + 4;
-
-	local x = 8;
-	if item.url ~= nil then
-		local r, g, b, a = 1, 1, 1, 1;
-		if item.latestVersion ~= item.version then
-			self:drawText(item.name,                         x, 2 + y,   r, 0.6, 0.0, a);
-			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r, 0.6, 0.0, a);
-			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y, 0.0,   g, 0.0, a);
-		else
-			self:drawText(item.name,                         x, 2 + y,   r,   g,   b, a);
-			self:drawText(item.version,       self.width*0.6+x, 2 + y,   r,   g,   b, a);
-			self:drawText(item.latestVersion, self.width*0.7+x, 2 + y,   r,   g,   b, a);
-		end
-		self:drawText(item.minVersion,      self.width*0.8+x, 2 + y,   r,   g,   b, a);
-
-		local line2 = nil;
-		local line3 = nil;
-		if TinyAVC.isNewerVersion(getCore():getVersionNumber(), item.minVersion) then
-			line2 = "You must update PZ to at least version "..item.minVersion.." to use this mod!";
-			if not TinyAVC.versionIsCompatible(getCore():getVersionNumber(), item.minVersion) then
-				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..item.minVersion.."! Expect breakage!";
-			end
-		elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), item.minVersion) then
-			line2 = "This mod was built for PZ version "..item.minVersion.."!";
-			if not TinyAVC.versionIsCompatible(item.minVersion, getCore():getVersionNumber()) then
-				line3 = "Version "..getCore():getVersionNumber().." is not compatible to "..item.minVersion.."! Expect breakage!";
-			end
-		end
-		if line2 ~= nil then
-			height = height + 2 + TinyAVC.lineHeight;
-			self:drawText(line2, 20+x, 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
-		end
-		if line3 ~= nil then
-			height = height + 2 + TinyAVC.lineHeight;
-			self:drawText(line3, 20+x, 2 + TinyAVC.lineHeight + 2 + TinyAVC.lineHeight + 2 + y, r, g, b, a);
-		end
-
-		if item.urlButton ~= nil then
-			item.urlButton:setY(self:getYScroll()+y);
-		else
-			local x = self:getWidth() * 0.9;
-			item.urlButton = ISButton:new(x, self:getYScroll()+y, self:getWidth() - x - self.vscroll:getWidth(), height, "URL", item, ModSelector.onOptionMouseDown);
-			item.urlButton.internal = "URL";
-			item.urlButton.url = item.srcUrl;
-			item.urlButton:initialise();
-			item.urlButton:instantiate();
-			item.urlButton:setFont(UIFont.Small);
-			self.parent:addChild(item.urlButton);
-		end
-		-- item.urlButton:prerender();
-		-- item.urlButton:render();
-	else
-		self:drawText(item.name.." does not support Tiny AVC :-(", x, 2 + y, 0.3, 0.3, 0.3, 1.0);
-	end
-
-	self:drawRectBorder(4, y, self:getWidth() - (4 + self.vscroll:getWidth()), height, 0.5, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-
-	return y + height;
-end
--- }}}
-function TinyAVCWindow:createChildren() -- {{{
-	ISCollapsableWindow.createChildren(self);
-
-	self.headerMod = ISButton:new(1, 17, self.width*0.6-1, 20, "Mod");
-	self:addChild(self.headerMod);
-
-	self.headerCurVer = ISButton:new(self.width*0.6, 17, self.width*0.1, 20, "Current");
-	self:addChild(self.headerCurVer);
-
-	self.headerLastVer = ISButton:new(self.width*0.7, 17, self.width*0.1, 20, "Latest");
-	self:addChild(self.headerLastVer);
-
-	self.headerNeedPZVer = ISButton:new(self.width*0.8, 17, self.width*0.1, 20, "Need PZ");
-	self:addChild(self.headerNeedPZVer);
-
-	self.bounds = ISPanel:new(1, 37, self.width-2, self.height-37);
-	self.bounds.prerender = function(self)
-		self:setStencilRect(0,0,self.width+1, self.height);
-		ISPanel.prerender(self);
-	end
-	self.bounds.render = function(self)
-		ISPanel.render(self);
-		self:clearStencilRect();
-	end
-	self:addChild(self.bounds);
-
-	self.contentBox = ISScrollingListBox:new(0, 0, self.bounds.width, self.bounds.height);
-	self.contentBox.itemheight = 64;
-	self.contentBox.drawBorder = true;
-	self.contentBox.doDrawItem = TinyAVCWindow.doDrawItem;
-	self.contentBox.parent = self;
-	self.contentBox:initialise();
-	self.contentBox:instantiate();
-	self.contentBox:setAnchorLeft(true);
-	self.contentBox:setAnchorRight(true);
-	self.contentBox:setAnchorTop(true);
-	self.contentBox:setAnchorBottom(true);
-	self.contentBox.parent = self.bounds;
-	self.contentBox.prerender = TinyAVC.ScrollingListBoxPreRender;
-	self.bounds:addChild(self.contentBox);
-end -- }}}
-
-local TAG_VERSION     = "modversion=";
-local TAG_PZ_VERSION  = "pzversion=";
-local TAG_VERSION_URL = "versionurl=";
-local TAG_MOD_URL     = "modurl=";
-local TAG_DELIMITER   = "=";
 
 -- @deprecated Will be removed in future versions.
 local function assureBackwardsCompatibility(mod) -- {{{
-	TinyAVC.checked = true;
-	TinyAVC.content = "";
 	TinyAVC.mods[mod] = {};
 	local f = getFileInput("..".."/".."mods".."/"..mod.."/".."tiny_avc.txt");
 	if f ~= nil then
 		local line = f:readLine();
 		while line ~= nil do
 			if luautils.stringStarts(line, "version:") then
-				local r = string.split(line, ":");
+				local r = luautils.split(line, ":");
 				TinyAVC.mods[mod].version = r[2];
 			end
 			if luautils.stringStarts(line, "url:") then
-				local r = string.split(line, ":")
+				local r = luautils.split(line, ":")
 				TinyAVC.mods[mod].url = r[2]..":"..r[3];
 			end
 			line = f:readLine();
@@ -488,17 +117,17 @@ local function assureBackwardsCompatibility(mod) -- {{{
 		--minVersion:30.16
 		--url:http://theindiestone.com/forums/index.php/topic/10952-dirty-water-and-saltwater-get-sick-by-drinking-from-the-toilet-rain-barrel-collect-water-from-rivers/
 		--]]
-		for _,line in pairs(string.split(content, "\n")) do
+		for _,line in pairs(luautils.split(content, "\n")) do
 			if luautils.stringStarts(line, "version:") then
-				local r = string.split(line, ":");
+				local r = luautils.split(line, ":");
 				TinyAVC.mods[mod].latestVersion = r[2];
 			end
 			if luautils.stringStarts(line, "minVersion:") then
-				local r = string.split(line, ":");
+				local r = luautils.split(line, ":");
 				TinyAVC.mods[mod].minVersion = r[2];
 			end
 			if luautils.stringStarts(line, "url:") then
-				local r = string.split(line, ":");
+				local r = luautils.split(line, ":");
 				TinyAVC.mods[mod].srcUrl = r[2]..":"..r[3];
 			end
 		end
@@ -506,25 +135,21 @@ local function assureBackwardsCompatibility(mod) -- {{{
 end
 -- }}}
 
-function TinyAVCWindow:downloadUpdates() -- {{{
-	if TinyAVC.checked then return end;
-	TinyAVC.checked = true;
-
+function TinyAVC.downloadUpdates() -- {{{
 	local content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/versionHistory.txt");
-	for _,line in pairs(string.split(content, "\n")) do
+	for _,line in pairs(luautils.split(content, "\n")) do
 		if not luautils.stringStarts(line, "#") then
-			local t = string.split(line, ";");
+			local t = luautils.split(line, ";");
 			TinyAVC.versionHistory[t[1]] = { order = t[2], backwardsCompatible = (t[3] == "true") };
 		end
 	end
 
 	content = TinyAVC.getUrl("https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/sanitizeVersion.txt");
-	for _,line in pairs(string.split(content, "\n")) do
-		local t = string.split(line, ";");
+	for _,line in pairs(luautils.split(content, "\n")) do
+		local t = luautils.split(line, ";");
 		TinyAVC.sanitizeTISVersion[t[1]] = t[2];
 	end
 
-	TinyAVC.content = "";
 	local list = getModDirectoryTable();
 	for _, mod in pairs(list) do
 		TinyAVC.mods[mod] = {};
@@ -536,11 +161,11 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 					file:close();
 					break;
 				end
-				if luautils.stringStarts(line, TAG_VERSION) then
-					local snippet = string.split(line, TAG_DELIMITER);
+				if luautils.stringStarts(line, TinyAVC.TAG_VERSION) then
+					local snippet = luautils.split(line, TinyAVC.TAG_DELIMITER);
 					TinyAVC.mods[mod].version = snippet[2];
-				elseif luautils.stringStarts(line, TAG_VERSION_URL) then
-					local snippet = string.split(line, TAG_DELIMITER)
+				elseif luautils.stringStarts(line, TinyAVC.TAG_VERSION_URL) then
+					local snippet = luautils.split(line, TinyAVC.TAG_DELIMITER)
 					TinyAVC.mods[mod].url = snippet[2];
 				end
 			end
@@ -552,15 +177,15 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 			TinyAVC.mods[mod].srcUrl = "ERR";
 
 			local content = TinyAVC.getUrl(TinyAVC.mods[mod].url);
-			for _, line in pairs(string.split(content, "\n")) do
-				if luautils.stringStarts(line, TAG_VERSION) then
-					local snippet = string.split(line, TAG_DELIMITER);
+			for _, line in pairs(luautils.split(content, "\n")) do
+				if luautils.stringStarts(line, TinyAVC.TAG_VERSION) then
+					local snippet = luautils.split(line, TinyAVC.TAG_DELIMITER);
 					TinyAVC.mods[mod].latestVersion = snippet[2];
-				elseif luautils.stringStarts(line, TAG_PZ_VERSION) then
-					local snippet = string.split(line, TAG_DELIMITER);
+				elseif luautils.stringStarts(line, TinyAVC.TAG_PZ_VERSION) then
+					local snippet = luautils.split(line, TinyAVC.TAG_DELIMITER);
 					TinyAVC.mods[mod].minVersion = snippet[2];
-				elseif luautils.stringStarts(line, TAG_MOD_URL) then
-					local snippet = string.split(line, TAG_DELIMITER);
+				elseif luautils.stringStarts(line, TinyAVC.TAG_MOD_URL) then
+					local snippet = luautils.split(line, TinyAVC.TAG_DELIMITER);
 					TinyAVC.mods[mod].srcUrl = snippet[2];
 				end
 			end
@@ -572,42 +197,40 @@ function TinyAVCWindow:downloadUpdates() -- {{{
 	end
 end
 -- }}}
-function TinyAVCWindow:checkForUpdate() -- {{{
-	self:setVisible(true);
-	self:downloadUpdates();
-	ModSelector.instance.listbox:setVisible(false);
+function TinyAVC.checkForUpdate() -- {{{
+	TinyAVC.downloadUpdates();
 
-	for modName,mod in TinyAVC.modsSorted() do
-		mod.name = modName;
-		self.contentBox:addItem(modName, mod);
+	for i,k in ipairs(ModSelector.instance.listbox.items) do
+		local modInfo = TinyAVC.mods[k.text];
+		local addText = " <LINE> <LINE> ";
+		if modInfo.url == nil then
+			addText = addText .. " <RED> This mod does not support version checking.";
+		else
+			addText = addText .. " <WHITE> Current version: "..modInfo.version.." <LINE> ";
+			if modInfo.latestVersion == modInfo.version then
+				addText = addText .. " <GREEN> You have the latest version! <WHITE> <LINE> ";
+			else
+				addText = addText .. " <ORANGE> Latest version: "..modInfo.latestVersion.." <WHITE> <LINE> ";
+				if modInfo.minVersion ~= nil then
+					if TinyAVC.isNewerVersion(getCore():getVersionNumber(), modInfo.minVersion) then
+						addText = addText .. " <WHITE> You must update PZ to at least version "..modInfo.minVersion.." to use this mod! <LINE> ";
+					elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), modInfo.minVersion) then
+						addText = addText .. " <WHITE> This mod was built for PZ version "..modInfo.minVersion.."! <LINE> ";
+					end
+					if not TinyAVC.versionIsCompatible(modInfo.minVersion, getCore():getVersionNumber()) then
+						addText = addText .. " <RED> PZ Version "..getCore():getVersionNumber().." is not compatible to "..modInfo.minVersion.."! This mod might not work! <WHITE> <LINE> ";
+					end
+				end
+			end
+		end
+
+		local text = k.item.modInfo:getDescription();
+		k.item.richText:setText(text .. addText);
+		k.item.richText:paginate();
 	end
 end -- }}}
-function TinyAVCWindow:new (x, y, width, height) -- {{{
-	local o = {}
-	o = ISCollapsableWindow:new(x, y, width, height);
-	setmetatable(o, self)
-	self.__index = self
-	o.title = "Tiny Automated Version Checker";
-	o.minimumWidth = 500;
-	o.minimumHeight = 100;
-	return o
-end -- }}}
-function TinyAVCWindow:onMouseDown(x, y) -- {{{
-	self:bringToTop();
-end
--- }}}
-function TinyAVCWindow:close() -- {{{
-	ISCollapsableWindow.close(self);
-	ModSelector.instance.listbox:setVisible(true);
-end
--- }}}
 
 TinyAVC.init = function() -- {{{
-	TinyAVC.win = TinyAVCWindow:new(ModSelector.instance.listbox:getX(), ModSelector.instance.listbox:getY(), ModSelector.instance.listbox:getWidth(), ModSelector.instance.listbox:getHeight());
-	TinyAVC.win:initialise();
-	TinyAVC.win:setVisible(false);
-	ModSelector.instance:addChild(TinyAVC.win);
-
 	-- Position the button next to the Get Mods button
 	local x = MainScreen.instance.modSelect.getModButton:getX();
 	x       = x + MainScreen.instance.modSelect.getModButton:getWidth();
@@ -616,7 +239,7 @@ TinyAVC.init = function() -- {{{
 	local w = MainScreen.instance.modSelect.getModButton:getWidth();
 	local h = MainScreen.instance.modSelect.getModButton:getHeight();
 
-	TinyAVC.checkNow = ISButton:new(x, y, w, h, "Check for updates", TinyAVC.win, TinyAVCWindow.checkForUpdate);
+	TinyAVC.checkNow = ISButton:new(x, y, w, h, "Check for updates", nil, TinyAVC.checkForUpdate);
 	TinyAVC.checkNow.borderColor = {r=1, g=1, b=1, a=0.1};
 	TinyAVC.checkNow:ignoreWidthChange();
 	TinyAVC.checkNow:ignoreHeightChange();
