@@ -1,6 +1,6 @@
 UI_DE = {
     UI_TinyAVC_Not_Supported = " <RED> TinyAVC wird von dieser Mod nicht unterstützt.",
-    UI_TinyAVC_Current_Version = " <WHITE> Aktuelle Version: %s <LINE> ",
+    UI_TinyAVC_Current_Version = " <WHITE> Installierte Version: %s <LINE> ",
     UI_TinyAVC_Up_To_Date = " <GREEN> Du hast die neueste Version! <WHITE> <LINE> ",
     UI_TinyAVC_Update_Available = " <ORANGE> Neueste Version: %s <WHITE> <LINE> ",
     UI_TinyAVC_PZ_Newer = " <WHITE> Du musst PZ mindestens bis Version %s updaten, um diese Mod nutzen zu können! <LINE> ",
