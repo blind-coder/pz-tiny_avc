@@ -204,21 +204,21 @@ function TinyAVC.checkForUpdate() -- {{{
 		local modInfo = TinyAVC.mods[k.text];
 		local addText = " <LINE> <LINE> ";
 		if modInfo.url == nil then
-			addText = addText .. " <RED> This mod does not support version checking.";
+			addText = addText .. getText('UI_TinyAVC_Not_Supported');
 		else
-			addText = addText .. " <WHITE> Current version: "..modInfo.version.." <LINE> ";
+			addText = addText .. string.format(getText('UI_TinyAVC_Current_Version'), modInfo.version);
 			if modInfo.latestVersion == modInfo.version then
-				addText = addText .. " <GREEN> You have the latest version! <WHITE> <LINE> ";
+				addText = addText .. getText('UI_TinyAVC_Up_To_Date');
 			else
-				addText = addText .. " <ORANGE> Latest version: "..modInfo.latestVersion.." <WHITE> <LINE> ";
+				addText = addText .. string.format(getText('UI_TinyAVC_Update_Available'), modInfo.latestVersion);
 				if modInfo.minVersion ~= nil then
 					if TinyAVC.isNewerVersion(getCore():getVersionNumber(), modInfo.minVersion) then
-						addText = addText .. " <WHITE> You must update PZ to at least version "..modInfo.minVersion.." to use this mod! <LINE> ";
+						addText = addText .. string.format(getText('UI_TinyAVC_PZ_Newer'), modInfo.minVersion);
 					elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), modInfo.minVersion) then
-						addText = addText .. " <WHITE> This mod was built for PZ version "..modInfo.minVersion.."! <LINE> ";
+						addText = addText .. string.format(getText('UI_TinyAVC_PZ_Older'), modInfo.minVerion);
 					end
 					if not TinyAVC.versionIsCompatible(modInfo.minVersion, getCore():getVersionNumber()) then
-						addText = addText .. " <RED> PZ Version "..getCore():getVersionNumber().." is not compatible to "..modInfo.minVersion.."! This mod might not work! <WHITE> <LINE> ";
+						addText = addText .. string.format(getText('UI_TinyAVC_Not_Compatible'), getCore():getVersionNumber(), modInfo.minVersion);
 					end
 				end
 			end
@@ -239,7 +239,7 @@ TinyAVC.init = function() -- {{{
 	local w = MainScreen.instance.modSelect.getModButton:getWidth();
 	local h = MainScreen.instance.modSelect.getModButton:getHeight();
 
-	TinyAVC.checkNow = ISButton:new(x, y, w, h, "Check for updates", nil, TinyAVC.checkForUpdate);
+	TinyAVC.checkNow = ISButton:new(x, y, w, h, getText('UI_TinyAVC_Button_Text'), nil, TinyAVC.checkForUpdate);
 	TinyAVC.checkNow.borderColor = {r=1, g=1, b=1, a=0.1};
 	TinyAVC.checkNow:ignoreWidthChange();
 	TinyAVC.checkNow:ignoreHeightChange();

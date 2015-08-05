@@ -1,0 +1,10 @@
+UI_DE = {
+    UI_TinyAVC_Not_Supported = " <RED> TinyAVC wird von dieser Mod nicht unterstützt.",
+    UI_TinyAVC_Current_Version = " <WHITE> Installierte Version: %s <LINE> ",
+    UI_TinyAVC_Up_To_Date = " <GREEN> Du hast die neueste Version! <WHITE> <LINE> ",
+    UI_TinyAVC_Update_Available = " <ORANGE> Neueste Version: %s <WHITE> <LINE> ",
+    UI_TinyAVC_PZ_Newer = " <WHITE> Du musst PZ mindestens bis Version %s updaten, um diese Mod nutzen zu können! <LINE> ",
+    UI_TinyAVC_PZ_Older = " <WHITE> Diese Mod wurde für Version %s von Project Zomboid entwickelt! <LINE> ",
+    UI_TinyAVC_Not_Compatible = " <RED> Die PZ Version %s ist nicht mit %s kompatibel! Diese Mod kann zu Problemen führen! <WHITE> <LINE> ",
+    UI_TinyAVC_Button_Text = "Nach Updates suchen",
+};
