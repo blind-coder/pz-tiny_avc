@@ -215,7 +215,7 @@ function TinyAVC.checkForUpdate() -- {{{
 					if TinyAVC.isNewerVersion(getCore():getVersionNumber(), modInfo.minVersion) then
 						addText = addText .. string.format(getText('UI_TinyAVC_PZ_Newer'), modInfo.minVersion);
 					elseif TinyAVC.isOlderVersion(getCore():getVersionNumber(), modInfo.minVersion) then
-						addText = addText .. string.format(getText('UI_TinyAVC_PZ_Older'), modInfo.minVerion);
+						addText = addText .. string.format(getText('UI_TinyAVC_PZ_Older'), modInfo.minVersion);
 					end
 					if not TinyAVC.versionIsCompatible(modInfo.minVersion, getCore():getVersionNumber()) then
 						addText = addText .. string.format(getText('UI_TinyAVC_Not_Compatible'), getCore():getVersionNumber(), modInfo.minVersion);
