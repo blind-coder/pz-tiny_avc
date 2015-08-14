@@ -4,6 +4,6 @@ description=Automated mod version checker.
 id=tiny_avc
 url=http://theindiestone.com/forums/index.php/topic/13014-tiny-automated-version-checker-tiny-avc
 
-modversion=0.8.2
-pzversion=32.16
+modversion=0.8.3
+pzversion=32.20
 versionurl=https://raw.githubusercontent.com/blind-coder/pz-tiny_avc/master/mod.info

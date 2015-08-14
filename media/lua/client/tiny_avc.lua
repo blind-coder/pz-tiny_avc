@@ -152,8 +152,10 @@ function TinyAVC.downloadUpdates() -- {{{
 
 	local list = getModDirectoryTable();
 	for _, mod in pairs(list) do
+		mod = luautils.split(mod, "/");
+		mod = mod[#mod];
 		TinyAVC.mods[mod] = {};
-		local file = getFileInput("..".."/".."mods".."/"..mod.."/".."mod.info");
+		local file = getModFileReader(nil, mod.."/mod.info", false);
 		if file then
 			while true do
 				local line = file:readLine();
@@ -201,7 +203,9 @@ function TinyAVC.checkForUpdate() -- {{{
 	TinyAVC.downloadUpdates();
 
 	for i,k in ipairs(ModSelector.instance.listbox.items) do
-		local modInfo = TinyAVC.mods[k.text];
+		local mod = luautils.split(k.text, "/");
+		mod = mod[#mod];
+		local modInfo = TinyAVC.mods[mod];
 		local addText = " <LINE> <LINE> ";
 		if modInfo.url == nil then
 			addText = addText .. getText('UI_TinyAVC_Not_Supported');
