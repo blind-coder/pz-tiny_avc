@@ -152,8 +152,8 @@ function TinyAVC.downloadUpdates() -- {{{
 
 	local list = getModDirectoryTable();
 	for _, mod in pairs(list) do
-		mod = luautils.split(mod, "/");
-		mod = mod[#mod];
+		local modInfo = getModInfo(mod);
+		mod = modInfo:getId();
 		TinyAVC.mods[mod] = {};
 		local file = getModFileReader(mod, "mod.info", false);
 		if file then
