@@ -237,11 +237,11 @@ end -- }}}
 TinyAVC.init = function() -- {{{
 	-- Position the button next to the Get Mods button
 	local x = MainScreen.instance.modSelect.getModButton:getX();
-	x       = x + MainScreen.instance.modSelect.getModButton:getWidth();
-	x       = x + 10;
 	local y = MainScreen.instance.modSelect.getModButton:getY();
 	local w = MainScreen.instance.modSelect.getModButton:getWidth();
 	local h = MainScreen.instance.modSelect.getModButton:getHeight();
+	x       = x - w;
+	x       = x - 10;
 
 	TinyAVC.checkNow = ISButton:new(x, y, w, h, getText('UI_TinyAVC_Button_Text'), nil, TinyAVC.checkForUpdate);
 	TinyAVC.checkNow.borderColor = {r=1, g=1, b=1, a=0.1};
