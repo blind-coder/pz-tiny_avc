@@ -155,7 +155,7 @@ function TinyAVC.downloadUpdates() -- {{{
 		mod = luautils.split(mod, "/");
 		mod = mod[#mod];
 		TinyAVC.mods[mod] = {};
-		local file = getModFileReader(nil, mod.."/mod.info", false);
+		local file = getModFileReader(mod, "mod.info", false);
 		if file then
 			while true do
 				local line = file:readLine();
