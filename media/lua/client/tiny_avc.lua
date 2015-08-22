@@ -203,8 +203,8 @@ function TinyAVC.checkForUpdate() -- {{{
 	TinyAVC.downloadUpdates();
 
 	for i,k in ipairs(ModSelector.instance.listbox.items) do
-		local mod = luautils.split(k.text, "/");
-		mod = mod[#mod];
+		local mod = getModInfo(k.text);
+		mod = mod:getId();
 		local modInfo = TinyAVC.mods[mod];
 		local addText = " <LINE> <LINE> ";
 		if modInfo.url == nil then
