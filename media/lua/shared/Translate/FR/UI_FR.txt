@@ -1,4 +1,4 @@
-UI_EN = {
+UI_FR = {
     UI_TinyAVC_Not_Supported = " <RED> Ce mod ne supporte pas le test de version.",
     UI_TinyAVC_Current_Version = " <WHITE> Version installé: %s <LINE> ",
     UI_TinyAVC_Up_To_Date = " <GREEN> Vous avez la dernière version! <WHITE> <LINE> ",
