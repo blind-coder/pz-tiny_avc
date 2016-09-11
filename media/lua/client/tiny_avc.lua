@@ -6,6 +6,11 @@ require "ISUI/ISScrollingListBox"
 require "ISUI/ISPanel"
 require "luautils";
 
+local v = require 'semver'
+assert( v, "semver test v fail")
+v2_5_3 = v('2.5.3')
+assert( v2_5_3, "semver fail")
+
 TinyAVC = {};
 TinyAVC.mods = {};
 TinyAVC.lineHeight = getTextManager():MeasureStringY(UIFont.Small, "Mg");
